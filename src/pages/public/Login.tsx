@@ -5,10 +5,11 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [isSignup, setIsSignup] = useState(false);
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const lowerEmail = email.toLowerCase();
@@ -17,49 +18,102 @@ export default function Login() {
     if (lowerEmail.includes("driver")) role = "driver";
     if (lowerEmail.includes("admin")) role = "admin";
 
-    const user = { email, role };
-    localStorage.setItem("user", JSON.stringify(user));
+    const user = {
+      fullName,
+      email,
+      role,
+    };
 
+    localStorage.setItem("user", JSON.stringify(user));
     navigate(`/${role}/dashboard`);
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>{isSignup ? "Create Account" : "Welcome Back"}</h1>
+    <div className="auth-page">
+      <div className="auth-overlay"></div>
 
-        <form onSubmit={handleSubmit}>
-          {isSignup && (
-            <input type="text" placeholder="Full Name" required />
-          )}
+      <div className="auth-wrapper">
+        <div className="auth-left">
+          <h1>Canberra Bus</h1>
+          <p>
+            Travel smarter with a modern bus management system for passengers,
+            drivers, and administrators.
+          </p>
 
-          <input
-            type="email"
-            placeholder="Email (use passenger/driver/admin)"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className="auth-features">
+            <div className="feature-box">🚌 Real-time Bus Info</div>
+            <div className="feature-box">📍 Route Tracking</div>
+            <div className="feature-box">🎫 Easy Booking</div>
+            <div className="feature-box">⚙️ Smart Dashboard</div>
+          </div>
+        </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        <div className="auth-card">
+          <h2>{isSignup ? "Create Account" : "Welcome Back"}</h2>
+          <p className="auth-subtitle">
+            {isSignup
+              ? "Sign up to continue using Canberra Bus"
+              : "Login to access your dashboard"}
+          </p>
 
-          <button type="submit">
-            {isSignup ? "Sign Up" : "Login"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="auth-form">
+            {isSignup && (
+              <div className="input-group">
+                <label>Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
 
-        <p>
-          {isSignup ? "Already have an account?" : "New user?"}
-          <span onClick={() => setIsSignup(!isSignup)}>
-            {isSignup ? " Login" : " Sign up"}
-          </span>
-        </p>
+            <div className="input-group">
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="Example: passenger@test.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="input-group">
+              <label>Password</label>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="auth-btn">
+              {isSignup ? "Sign Up" : "Login"}
+            </button>
+          </form>
+
+          <p className="switch-text">
+            {isSignup ? "Already have an account?" : "New here?"}
+            <span onClick={() => setIsSignup(!isSignup)}>
+              {isSignup ? " Login" : " Create an account"}
+            </span>
+          </p>
+
+          <p className="demo-note">
+            Demo roles:
+            <br />
+            passenger@test.com
+            <br />
+            driver@test.com
+            <br />
+            admin@test.com
+          </p>
+        </div>
       </div>
     </div>
   );
