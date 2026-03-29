@@ -1,14 +1,14 @@
 export default function PassengerDashboard() {
   return (
-    <>
+    <div className="dashboard">
       <h1>Passenger Dashboard</h1>
-      <p>Welcome to the passenger dashboard.</p>
 
-      <div className="card-grid">
-        <div className="card">View bus schedules</div>
-        <div className="card">Book tickets</div>
-        <div className="card">Check your bookings</div>
+      <div className="cards">
+        <div className="card">🚌 Available Buses</div>
+        <div className="card">📍 Track Bus</div>
+        <div className="card">🎫 My Tickets</div>
+        <div className="card">⭐ Feedback</div>
       </div>
-    </>
+    </div>
   );
 }
