@@ -17,7 +17,7 @@ export default function Contact() {
       <section className="contact-hero-section">
         <div className="contact-hero-content">
           <p className="eyebrow">Support & enquiries</p>
-          <h1>Contact Canberra Bus Company updated</h1>
+          <h1>Contact Canberra Bus Company </h1>
           <p className="contact-hero-text">
             Need help with bookings, route information, support requests, or
             general enquiries? Our team is here to help passengers, drivers,
