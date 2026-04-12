@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   FaEnvelope,
   FaPhoneAlt,
@@ -11,13 +12,50 @@ import {
 } from "react-icons/fa";
 
 export default function Contact() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newMessage = {
+      id: Date.now(),
+      fullName,
+      email,
+      subject,
+      message,
+      date: new Date().toLocaleString(),
+      status: "New",
+    };
+
+    const existingMessages = JSON.parse(
+      localStorage.getItem("contactMessages") || "[]"
+    );
+
+    existingMessages.unshift(newMessage);
+
+    localStorage.setItem("contactMessages", JSON.stringify(existingMessages));
+
+    setFullName("");
+    setEmail("");
+    setSubject("");
+    setMessage("");
+    setSuccessMessage("Your message has been sent successfully.");
+
+    setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
+  };
+
   return (
     <div className="contact-page">
-      {/* HERO */}
       <section className="contact-hero-section">
         <div className="contact-hero-content">
           <p className="eyebrow">Support & enquiries</p>
-          <h1>Contact Canberra Bus Company </h1>
+          <h1>Contact Canberra Bus Company</h1>
           <p className="contact-hero-text">
             Need help with bookings, route information, support requests, or
             general enquiries? Our team is here to help passengers, drivers,
@@ -26,7 +64,6 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* CONTACT INFO CARDS */}
       <section className="contact-info-grid">
         <div className="contact-info-card">
           <FaEnvelope className="contact-info-icon" />
@@ -53,7 +90,6 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* FORM + SUPPORT PANEL */}
       <section className="contact-main-grid">
         <div className="contact-form-panel">
           <p className="eyebrow">Get in touch</p>
@@ -63,21 +99,39 @@ export default function Contact() {
             possible.
           </p>
 
-          <form className="contact-form">
+          <form className="contact-form" onSubmit={handleSubmit}>
             <div className="contact-form-grid">
               <div className="contact-form-group">
                 <label>Full Name</label>
-                <input type="text" placeholder="Enter your full name" />
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="contact-form-group">
                 <label>Email Address</label>
-                <input type="email" placeholder="Enter your email address" />
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="contact-form-group full-width">
                 <label>Subject</label>
-                <input type="text" placeholder="Enter message subject" />
+                <input
+                  type="text"
+                  placeholder="Enter message subject"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="contact-form-group full-width">
@@ -85,6 +139,9 @@ export default function Contact() {
                 <textarea
                   placeholder="Write your message here..."
                   rows={6}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  required
                 ></textarea>
               </div>
             </div>
@@ -93,6 +150,10 @@ export default function Contact() {
               <FaPaperPlane />
               Send Message
             </button>
+
+            {successMessage && (
+              <div className="contact-success-message">{successMessage}</div>
+            )}
           </form>
         </div>
 
@@ -133,7 +194,6 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* LOCATION + FAQ */}
       <section className="contact-bottom-grid">
         <div className="contact-location-card">
           <p className="eyebrow">Office location</p>

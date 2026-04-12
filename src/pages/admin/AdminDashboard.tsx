@@ -4,16 +4,20 @@ import {
   FaRoute,
   FaUsers,
   FaChartBar,
-  FaArrowRight,
   FaClipboardList,
   FaUserShield,
   FaCog,
   FaExclamationTriangle,
+  FaEnvelope,
 } from "react-icons/fa";
 
 export default function AdminDashboard() {
   const adminName =
     JSON.parse(localStorage.getItem("user") || "{}")?.fullName || "Admin";
+
+  const contactMessages = JSON.parse(
+    localStorage.getItem("contactMessages") || "[]"
+  );
 
   const stats = [
     { title: "Total Buses", value: "40", icon: <FaBusAlt /> },
@@ -171,6 +175,42 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
+      </section>
+
+      <section className="admin-panel">
+        <div className="admin-panel-head">
+          <div>
+            <p className="admin-eyebrow">Contact messages</p>
+            <h2>User enquiries</h2>
+          </div>
+        </div>
+
+        {contactMessages.length === 0 ? (
+          <div className="admin-empty-messages">
+            <FaEnvelope className="admin-message-icon" />
+            <p>No contact messages yet.</p>
+          </div>
+        ) : (
+          <div className="admin-message-list">
+            {contactMessages.map((msg: any) => (
+              <div className="admin-message-card" key={msg.id}>
+                <div className="admin-message-top">
+                  <div>
+                    <h3>{msg.subject}</h3>
+                    <p className="admin-message-meta">
+                      {msg.fullName} • {msg.email}
+                    </p>
+                  </div>
+                  <span className="admin-message-status">{msg.status}</span>
+                </div>
+
+                <p className="admin-message-body">{msg.message}</p>
+
+                <div className="admin-message-date">{msg.date}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
