@@ -1,32 +1,46 @@
-import { mockBuses, mockRoutes } from "../../data/mockData";
+import "./DriverPages.css";
 
 export default function AssignedRoutes() {
+  const routes = [
+    {
+      name: "Canberra City → Belconnen",
+      time: "08:30 AM",
+      status: "Active",
+    },
+    {
+      name: "ANU → Civic",
+      time: "10:00 AM",
+      status: "Pending",
+    },
+  ];
+
   return (
-    <>
-      <h1>Assigned Routes</h1>
+    <div className="driver-page">
+      <div className="driver-hero">
+        <div>
+          <h1>Assigned Routes</h1>
+          <p>View your daily assigned routes and schedules</p>
+        </div>
+      </div>
 
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Bus Number</th>
-            <th>Route</th>
-            <th>Stops</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mockBuses.map((bus) => {
-            const route = mockRoutes.find((r) => r.id === bus.routeId);
+      <div className="driver-panel">
+        {routes.map((route, index) => (
+          <div key={index} className="route-card">
+            <div className="route-title">{route.name}</div>
+            <div className="route-meta">Departure: {route.time}</div>
 
-            return (
-              <tr key={bus.id}>
-                <td>{bus.number}</td>
-                <td>{route?.name || "No Route Assigned"}</td>
-                <td>{route ? route.stops.join(" → ") : "N/A"}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </>
+            <span
+              className={`status-pill ${
+                route.status === "Active"
+                  ? "status-active"
+                  : "status-pending"
+              }`}
+            >
+              {route.status}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

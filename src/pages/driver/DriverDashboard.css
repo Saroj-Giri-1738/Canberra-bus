@@ -1,0 +1,354 @@
+.driver-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.driver-dashboard-hero {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 20px;
+  align-items: stretch;
+  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  color: white;
+  padding: 30px;
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+}
+
+.driver-eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #93c5fd;
+  font-weight: 700;
+}
+
+.driver-dashboard-hero h1 {
+  color: white;
+  margin: 8px 0 10px;
+  font-size: 2.4rem;
+}
+
+.driver-dashboard-subtext {
+  color: #dbeafe;
+  line-height: 1.7;
+  max-width: 720px;
+}
+
+.driver-hero-status-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 22px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.driver-status-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #bfdbfe;
+  margin-bottom: 8px;
+}
+
+.driver-hero-status-card h3 {
+  color: white;
+  margin-bottom: 8px;
+}
+
+.driver-hero-status-card p {
+  color: #dbeafe;
+  line-height: 1.6;
+}
+
+.driver-status-pill {
+  margin-top: 14px;
+  display: inline-flex;
+  width: fit-content;
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.driver-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.driver-stat-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  transition: 0.2s ease;
+}
+
+.driver-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
+}
+
+.driver-stat-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #dbeafe, #eff6ff);
+  color: var(--primary);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.driver-stat-card h3 {
+  font-size: 1.8rem;
+  margin-bottom: 4px;
+}
+
+.driver-stat-card p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.driver-main-grid,
+.driver-bottom-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 20px;
+}
+
+.driver-panel {
+  background: white;
+  border-radius: 24px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.driver-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.driver-panel-head h2 {
+  margin-top: 6px;
+}
+
+.driver-next-trip-card {
+  background: linear-gradient(135deg, #eff6ff, #f8fbff);
+  border: 1px solid #dbeafe;
+  border-radius: 22px;
+  padding: 24px;
+}
+
+.driver-trip-route-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.driver-trip-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+.driver-trip-route-row h3 {
+  margin: 0;
+}
+
+.driver-trip-arrow {
+  color: var(--primary);
+  font-size: 22px;
+}
+
+.driver-trip-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.driver-trip-meta-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: white;
+  border: 1px solid #e5eefc;
+  border-radius: 14px;
+  padding: 14px;
+  color: var(--dark);
+}
+
+.driver-trip-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.driver-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.driver-chip.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.driver-primary-btn {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 700;
+  font-family: inherit;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: white;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.driver-primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.18);
+}
+
+.driver-alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.driver-alert-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  background: #fbfdff;
+}
+
+.driver-alert-icon {
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+.driver-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.driver-quick-card {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  border: 1px solid #334155;
+  border-radius: 20px;
+  padding: 22px;
+  transition: 0.2s ease;
+}
+
+.driver-quick-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.14);
+}
+
+.driver-quick-icon {
+  font-size: 24px;
+  color: #60a5fa;
+  margin-bottom: 14px;
+}
+
+.driver-quick-card h3 {
+  color: white;
+  margin-bottom: 10px;
+}
+
+.driver-quick-card p {
+  color: #dbeafe;
+  margin: 0;
+}
+
+.driver-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.driver-check-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  background: #fbfdff;
+}
+
+.check-ok {
+  color: #22c55e;
+}
+
+.check-warn {
+  color: #f59e0b;
+}
+
+@media (max-width: 1100px) {
+  .driver-dashboard-hero,
+  .driver-main-grid,
+  .driver-bottom-grid,
+  .driver-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .driver-dashboard-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .driver-stats-grid,
+  .driver-main-grid,
+  .driver-bottom-grid,
+  .driver-quick-grid,
+  .driver-trip-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .driver-panel,
+  .driver-dashboard-hero {
+    padding: 22px;
+  }
+
+  .driver-dashboard-hero h1 {
+    font-size: 2rem;
+  }
+
+  .driver-trip-route-row,
+  .driver-trip-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

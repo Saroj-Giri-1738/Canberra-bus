@@ -1,0 +1,238 @@
+.driver-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.driver-page-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  color: white;
+  padding: 28px;
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+}
+
+.driver-page-hero h1 {
+  margin: 8px 0 10px;
+  color: white;
+  font-size: 2.3rem;
+}
+
+.driver-page-hero p {
+  color: #dbeafe;
+  margin: 0;
+  line-height: 1.7;
+  max-width: 760px;
+}
+
+.driver-page-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.12);
+  color: #dbeafe;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.driver-page-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 20px;
+}
+
+.driver-page-panel {
+  background: white;
+  border-radius: 24px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.driver-page-panel h2 {
+  margin: 0 0 10px;
+}
+
+.driver-page-panel p {
+  color: var(--muted);
+}
+
+.driver-route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.driver-route-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  transition: 0.2s ease;
+  background: white;
+}
+
+.driver-route-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+}
+
+.driver-route-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.driver-route-top h3 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.driver-route-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.driver-route-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.driver-action-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.driver-page-btn {
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-weight: 700;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: white;
+}
+
+.driver-page-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.18);
+}
+
+.driver-page-btn.present {
+  background: #22c55e;
+}
+
+.driver-page-btn.absent {
+  background: #ef4444;
+}
+
+.driver-status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.driver-status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.driver-status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.driver-attendance-box {
+  display: flex;
+  gap: 16px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.driver-attendance-result {
+  margin-top: 18px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  padding: 16px;
+  color: var(--primary-dark);
+}
+
+.driver-info-card {
+  background: linear-gradient(135deg, #eff6ff, #f8fbff);
+  border: 1px solid #dbeafe;
+  border-radius: 22px;
+  padding: 22px;
+}
+
+.driver-info-card h3 {
+  margin: 0 0 12px;
+}
+
+.driver-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.driver-info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--dark);
+}
+
+.driver-info-item svg {
+  color: var(--primary);
+}
+
+@media (max-width: 900px) {
+  .driver-page-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .driver-page-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+  }
+
+  .driver-page-hero h1 {
+    font-size: 2rem;
+  }
+
+  .driver-page-panel {
+    padding: 22px;
+  }
+
+  .driver-route-top,
+  .driver-attendance-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
