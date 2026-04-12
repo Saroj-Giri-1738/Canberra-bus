@@ -363,3 +363,133 @@
     align-items: flex-start;
   }
 }
+.admin-empty-messages {
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  text-align: center;
+  background: #fbfdff;
+  color: var(--muted);
+}
+
+.admin-message-icon {
+  font-size: 28px;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.admin-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-message-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  background: white;
+  transition: 0.2s ease;
+}
+
+.admin-message-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+}
+
+.admin-message-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.admin-message-top h3 {
+  margin: 0 0 6px;
+}
+
+.admin-message-meta {
+  color: var(--muted);
+  margin: 0;
+  font-size: 14px;
+}
+
+.admin-message-status {
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-message-status.new-status {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.admin-message-status.acknowledged {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-message-body {
+  color: var(--dark);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.admin-message-date {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.admin-message-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-message-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.admin-message-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.acknowledge-btn {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.acknowledge-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.delete-btn:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 700px) {
+  .admin-message-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,4 +1,5 @@
 import "./AdminDashboard.css";
+import { useEffect, useState } from "react";
 import {
   FaBusAlt,
   FaRoute,
@@ -9,15 +10,48 @@ import {
   FaCog,
   FaExclamationTriangle,
   FaEnvelope,
+  FaCheckCircle,
+  FaTrash,
 } from "react-icons/fa";
+
+type ContactMessage = {
+  id: number;
+  fullName: string;
+  email: string;
+  subject: string;
+  message: string;
+  date: string;
+  status: string;
+};
 
 export default function AdminDashboard() {
   const adminName =
     JSON.parse(localStorage.getItem("user") || "{}")?.fullName || "Admin";
 
-  const contactMessages = JSON.parse(
-    localStorage.getItem("contactMessages") || "[]"
-  );
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+
+  useEffect(() => {
+    const savedMessages = JSON.parse(
+      localStorage.getItem("contactMessages") || "[]"
+    );
+    setContactMessages(savedMessages);
+  }, []);
+
+  const handleAcknowledge = (id: number) => {
+    const updatedMessages = contactMessages.map((msg) =>
+      msg.id === id ? { ...msg, status: "Acknowledged" } : msg
+    );
+
+    setContactMessages(updatedMessages);
+    localStorage.setItem("contactMessages", JSON.stringify(updatedMessages));
+  };
+
+  const handleDelete = (id: number) => {
+    const updatedMessages = contactMessages.filter((msg) => msg.id !== id);
+
+    setContactMessages(updatedMessages);
+    localStorage.setItem("contactMessages", JSON.stringify(updatedMessages));
+  };
 
   const stats = [
     { title: "Total Buses", value: "40", icon: <FaBusAlt /> },
@@ -192,7 +226,7 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="admin-message-list">
-            {contactMessages.map((msg: any) => (
+            {contactMessages.map((msg) => (
               <div className="admin-message-card" key={msg.id}>
                 <div className="admin-message-top">
                   <div>
@@ -201,12 +235,42 @@ export default function AdminDashboard() {
                       {msg.fullName} • {msg.email}
                     </p>
                   </div>
-                  <span className="admin-message-status">{msg.status}</span>
+
+                  <span
+                    className={`admin-message-status ${
+                      msg.status === "Acknowledged"
+                        ? "acknowledged"
+                        : "new-status"
+                    }`}
+                  >
+                    {msg.status}
+                  </span>
                 </div>
 
                 <p className="admin-message-body">{msg.message}</p>
 
                 <div className="admin-message-date">{msg.date}</div>
+
+                <div className="admin-message-actions">
+                  <button
+                    className="admin-message-btn acknowledge-btn"
+                    onClick={() => handleAcknowledge(msg.id)}
+                    disabled={msg.status === "Acknowledged"}
+                  >
+                    <FaCheckCircle />
+                    {msg.status === "Acknowledged"
+                      ? "Acknowledged"
+                      : "Acknowledge"}
+                  </button>
+
+                  <button
+                    className="admin-message-btn delete-btn"
+                    onClick={() => handleDelete(msg.id)}
+                  >
+                    <FaTrash />
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
