@@ -1,3 +1,5 @@
+import "./PassengerDashboard.css";
+import { useNavigate } from "react-router-dom";
 import {
   FaBusAlt,
   FaCalendarAlt,
@@ -10,38 +12,20 @@ import {
   FaDownload,
   FaPlusCircle,
 } from "react-icons/fa";
-import "./PassengerDashboard.css";
 
 export default function PassengerDashboard() {
+  const navigate = useNavigate();
+
   const passengerName =
     JSON.parse(localStorage.getItem("user") || "{}")?.fullName || "Passenger";
 
+  const savedBookings = JSON.parse(localStorage.getItem("bookings") || "[]");
+
   const stats = [
-    { title: "Active Bookings", value: "03", icon: <FaTicketAlt /> },
+    { title: "Active Bookings", value: String(savedBookings.length).padStart(2, "0"), icon: <FaTicketAlt /> },
     { title: "Upcoming Trips", value: "02", icon: <FaCalendarAlt /> },
     { title: "Saved Routes", value: "05", icon: <FaRoute /> },
     { title: "Travel Points", value: "120", icon: <FaBusAlt /> },
-  ];
-
-  const bookings = [
-    {
-      route: "Canberra City → Belconnen",
-      date: "06 Apr 2026",
-      time: "08:30 AM",
-      status: "Confirmed",
-    },
-    {
-      route: "ANU → Civic",
-      date: "08 Apr 2026",
-      time: "10:00 AM",
-      status: "Pending",
-    },
-    {
-      route: "Woden → Airport",
-      date: "10 Apr 2026",
-      time: "11:20 AM",
-      status: "Confirmed",
-    },
   ];
 
   return (
@@ -57,13 +41,20 @@ export default function PassengerDashboard() {
         </div>
 
         <div className="passenger-hero-actions">
-          <button className="dashboard-primary-btn">
+          <button
+            className="dashboard-primary-btn"
+            onClick={() => navigate("/passenger/book-ticket")}
+          >
             <FaPlusCircle />
             Book New Trip
           </button>
-          <button className="dashboard-secondary-btn">
+
+          <button
+            className="dashboard-secondary-btn"
+            onClick={() => navigate("/passenger/bookings")}
+          >
             <FaDownload />
-            Download Ticket
+            View My Bookings
           </button>
         </div>
       </section>
@@ -125,7 +116,10 @@ export default function PassengerDashboard() {
 
             <div className="trip-status-row">
               <span className="status-pill confirmed">Confirmed</span>
-              <button className="dashboard-primary-btn small-btn">
+              <button
+                className="dashboard-primary-btn small-btn"
+                onClick={() => navigate("/passenger/bookings")}
+              >
                 View Ticket
               </button>
             </div>
@@ -156,7 +150,10 @@ export default function PassengerDashboard() {
               <input type="date" />
             </div>
 
-            <button className="dashboard-primary-btn full-btn">
+            <button
+              className="dashboard-primary-btn full-btn"
+              onClick={() => navigate("/passenger/schedule")}
+            >
               <FaSearch />
               Search Route
             </button>
@@ -174,24 +171,29 @@ export default function PassengerDashboard() {
           </div>
 
           <div className="bookings-list">
-            {bookings.map((booking, index) => (
-              <div className="booking-row" key={index}>
+            {savedBookings.length === 0 ? (
+              <div className="booking-row">
                 <div className="booking-main">
-                  <h3>{booking.route}</h3>
-                  <p>
-                    {booking.date} • {booking.time}
-                  </p>
+                  <h3>No bookings yet</h3>
+                  <p>Book a trip to see it here.</p>
                 </div>
-
-                <span
-                  className={`status-pill ${
-                    booking.status === "Confirmed" ? "confirmed" : "pending"
-                  }`}
-                >
-                  {booking.status}
-                </span>
               </div>
-            ))}
+            ) : (
+              savedBookings.slice(0, 3).map((booking: any, index: number) => (
+                <div className="booking-row" key={index}>
+                  <div className="booking-main">
+                    <h3>
+                      {booking.source} → {booking.destination}
+                    </h3>
+                    <p>
+                      {booking.travelDate} • {booking.departureTime}
+                    </p>
+                  </div>
+
+                  <span className="status-pill confirmed">Confirmed</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -204,19 +206,19 @@ export default function PassengerDashboard() {
           </div>
 
           <div className="quick-actions-grid">
-            <a href="/passenger/bookticket" className="quick-action-card">
+            <a href="/passenger/book-ticket" className="quick-action-card">
               <FaTicketAlt className="quick-action-icon" />
               <h3>Book Ticket</h3>
               <p>Reserve your next trip quickly and easily.</p>
             </a>
 
-            <a href="/passenger/mybookings" className="quick-action-card">
+            <a href="/passenger/bookings" className="quick-action-card">
               <FaCalendarAlt className="quick-action-icon" />
               <h3>My Bookings</h3>
               <p>Review your travel history and active reservations.</p>
             </a>
 
-            <a href="/passenger/busschedule" className="quick-action-card">
+            <a href="/passenger/schedule" className="quick-action-card">
               <FaBusAlt className="quick-action-icon" />
               <h3>Bus Schedule</h3>
               <p>Check route timing and daily departure details.</p>

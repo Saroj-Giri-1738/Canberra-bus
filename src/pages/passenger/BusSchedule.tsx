@@ -1,30 +1,41 @@
 import "./PassengerPages.css";
+import { useNavigate } from "react-router-dom";
 import { FaBusAlt, FaClock, FaMapMarkedAlt, FaCalendarAlt } from "react-icons/fa";
 
 export default function BusSchedule() {
+  const navigate = useNavigate();
+
   const schedules = [
     {
-      route: "Canberra City → Belconnen",
+      route: "Canberra City",
+      destination: "Belconnen",
       bus: "Express Line 1",
       time: "08:30 AM",
       date: "06 Apr 2026",
       stop: "Platform 3",
     },
     {
-      route: "ANU → Civic",
+      route: "ANU",
+      destination: "Civic",
       bus: "Campus Shuttle",
       time: "10:00 AM",
       date: "06 Apr 2026",
       stop: "Stop B2",
     },
     {
-      route: "Woden → Airport",
+      route: "Woden",
+      destination: "Airport",
       bus: "Airport Connect",
       time: "11:20 AM",
       date: "06 Apr 2026",
       stop: "Gate 4",
     },
   ];
+
+  const handleBookNow = (item: any) => {
+    localStorage.setItem("selectedTrip", JSON.stringify(item));
+    navigate("/passenger/book-ticket");
+  };
 
   return (
     <div className="passenger-page">
@@ -47,7 +58,9 @@ export default function BusSchedule() {
           {schedules.map((item, index) => (
             <div className="schedule-card" key={index}>
               <div className="schedule-top">
-                <h3>{item.route}</h3>
+                <h3>
+                  {item.route} → {item.destination}
+                </h3>
                 <span className="status-pill confirmed">On Time</span>
               </div>
 
@@ -56,6 +69,12 @@ export default function BusSchedule() {
                 <span><FaClock /> {item.time}</span>
                 <span><FaCalendarAlt /> {item.date}</span>
                 <span><FaMapMarkedAlt /> {item.stop}</span>
+              </div>
+
+              <div className="action-row">
+                <button className="passenger-btn" onClick={() => handleBookNow(item)}>
+                  Book Now
+                </button>
               </div>
             </div>
           ))}
