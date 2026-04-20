@@ -382,3 +382,27 @@
     grid-template-columns: 1fr;
   }
 }
+.admin-status-inactive {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.admin-report-details-box {
+  margin-top: 18px;
+  background: #f8fbff;
+  border: 1px solid #e5eefc;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.admin-report-details-box strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--dark);
+}
+
+.admin-report-details-box p {
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0;
+}

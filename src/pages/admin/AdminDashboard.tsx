@@ -1,5 +1,6 @@
 import "./AdminDashboard.css";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaBusAlt,
   FaRoute,
@@ -25,6 +26,8 @@ type ContactMessage = {
 };
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+
   const adminName =
     JSON.parse(localStorage.getItem("user") || "{}")?.fullName || "Admin";
 
@@ -108,19 +111,19 @@ export default function AdminDashboard() {
           </div>
 
           <div className="admin-tools-grid">
-            <a href="/admin/managebuses" className="admin-tool-card">
+            <a href="/admin/buses" className="admin-tool-card">
               <FaBusAlt className="admin-tool-icon" />
               <h3>Manage Buses</h3>
               <p>Update bus details, availability, and assignments.</p>
             </a>
 
-            <a href="/admin/manageroutes" className="admin-tool-card">
+            <a href="/admin/routes" className="admin-tool-card">
               <FaRoute className="admin-tool-icon" />
               <h3>Manage Routes</h3>
               <p>Control stop information, route planning, and schedules.</p>
             </a>
 
-            <a href="/admin/manageusers" className="admin-tool-card">
+            <a href="/admin/users" className="admin-tool-card">
               <FaUserShield className="admin-tool-icon" />
               <h3>Manage Users</h3>
               <p>Monitor passenger, driver, and admin accounts.</p>
@@ -191,19 +194,36 @@ export default function AdminDashboard() {
           </div>
 
           <div className="admin-action-list">
-            <button className="admin-primary-btn">
+            <button
+              className="admin-primary-btn"
+              onClick={() => navigate("/admin/buses")}
+            >
               <FaBusAlt />
               Add New Bus
             </button>
-            <button className="admin-primary-btn secondary">
+
+            <button
+              className="admin-primary-btn secondary"
+              onClick={() => navigate("/admin/routes")}
+            >
               <FaRoute />
               Create Route
             </button>
-            <button className="admin-primary-btn secondary">
+
+            <button
+              className="admin-primary-btn secondary"
+              onClick={() => navigate("/admin/users")}
+            >
               <FaUsers />
               Review Users
             </button>
-            <button className="admin-primary-btn secondary">
+
+            <button
+              className="admin-primary-btn secondary"
+              onClick={() =>
+                alert("System Settings can be added in the next iteration.")
+              }
+            >
               <FaCog />
               System Settings
             </button>
