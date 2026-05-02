@@ -1,200 +1,250 @@
+import { useEffect, useMemo, useState } from "react";
 import "./PassengerPages.css";
-import { useEffect, useState } from "react";
 import {
-  FaTicketAlt,
   FaBusAlt,
   FaCalendarAlt,
+  FaChair,
+  FaClock,
   FaMapMarkedAlt,
-  FaCreditCard,
-  FaArrowRight,
+  FaTicketAlt,
+  FaSyncAlt,
 } from "react-icons/fa";
+import {
+  createPassengerBooking,
+  formatTime,
+  getPassengerRoutes,
+  type PassengerRoute,
+} from "../../services/passengerApi";
 
 export default function BookTicket() {
-  const selectedTrip = JSON.parse(localStorage.getItem("selectedTrip") || "null");
+  const [routes, setRoutes] = useState<PassengerRoute[]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState("");
+  const [travelDate, setTravelDate] = useState("");
+  const [seats, setSeats] = useState("1");
+  const [loading, setLoading] = useState(true);
+  const [booking, setBooking] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [source, setSource] = useState(selectedTrip?.route || "");
-  const [destination, setDestination] = useState(selectedTrip?.destination || "");
-  const [travelDate, setTravelDate] = useState(selectedTrip?.date || "");
-  const [departureTime, setDepartureTime] = useState(selectedTrip?.time || "08:30 AM");
-  const [passengerName, setPassengerName] = useState("");
-  const [seatType, setSeatType] = useState("Standard");
-  const [paymentMethod, setPaymentMethod] = useState("Card Payment");
-  const [successMessage, setSuccessMessage] = useState("");
+  const loadRoutes = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const data = await getPassengerRoutes();
+      setRoutes(data);
+
+      if (data.length > 0 && !selectedRouteId) {
+        setSelectedRouteId(String(data[0].id));
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to load routes");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user?.fullName) setPassengerName(user.fullName);
+    loadRoutes();
+
+    const today = new Date().toISOString().slice(0, 10);
+    setTravelDate(today);
   }, []);
 
-  const handleConfirmBooking = () => {
-    if (!source || !destination || !travelDate || !departureTime || !passengerName) {
-      alert("Please fill in all required fields.");
+  const selectedRoute = useMemo(() => {
+    return routes.find((route) => String(route.id) === selectedRouteId) || null;
+  }, [routes, selectedRouteId]);
+
+  const totalAmount = useMemo(() => {
+    if (!selectedRoute) return 0;
+
+    return Number(selectedRoute.fare) * Number(seats || 1);
+  }, [selectedRoute, seats]);
+
+  const handleBookTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedRouteId || !travelDate || !seats) {
+      alert("Please select route, travel date, and seats.");
       return;
     }
 
-    const newBooking = {
-      id: Date.now(),
-      source,
-      destination,
-      travelDate,
-      departureTime,
-      passengerName,
-      seatType,
-      paymentMethod,
-      bus: selectedTrip?.bus || "Express Line 1",
-      status: "Confirmed",
-    };
+    try {
+      setBooking(true);
 
-    const existingBookings = JSON.parse(localStorage.getItem("bookings") || "[]");
-    existingBookings.unshift(newBooking);
-    localStorage.setItem("bookings", JSON.stringify(existingBookings));
+      await createPassengerBooking({
+        route_id: Number(selectedRouteId),
+        travel_date: travelDate,
+        seats: Number(seats),
+      });
 
-    setSuccessMessage("Booking confirmed successfully.");
-    localStorage.removeItem("selectedTrip");
+      alert("Ticket booked successfully and saved in MySQL bookings table.");
+
+      setSeats("1");
+    } catch (error: any) {
+      alert(error.message || "Failed to book ticket");
+    } finally {
+      setBooking(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="passenger-page">
+        <section className="passenger-panel">
+          <h2>Loading routes...</h2>
+        </section>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="passenger-page">
+        <section className="passenger-panel">
+          <h2>Something went wrong</h2>
+          <p>{errorMessage}</p>
+          <button className="passenger-btn" onClick={loadRoutes}>
+            Try Again
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="passenger-page">
-      <section className="passenger-page-hero">
+      <section className="passenger-hero">
         <div>
-          <span className="passenger-page-badge">Passenger Services</span>
-          <h1>Book Your Ticket</h1>
+          <span className="passenger-badge">Passenger Services</span>
+          <h1>Book Ticket</h1>
           <p>
-            Search routes, choose travel details, and reserve your next bus trip
-            with a cleaner and more user-friendly booking experience.
+            Select a route, choose your travel date and seats, then save your
+            booking directly into the MySQL bookings table.
           </p>
         </div>
+
+        <button className="passenger-btn light" onClick={loadRoutes}>
+          <FaSyncAlt />
+          Refresh Routes
+        </button>
       </section>
 
-      <div className="passenger-page-grid">
-        <div className="passenger-page-panel">
-          <h2>Trip Booking Form</h2>
-          <p>Complete the form below to reserve your next journey.</p>
+      <section className="passenger-grid">
+        <div className="passenger-panel">
+          <div className="passenger-panel-head">
+            <div>
+              <span className="passenger-badge">Booking Form</span>
+              <h2>Create New Booking</h2>
+            </div>
+          </div>
 
-          <div className="passenger-form-grid">
-            <div className="passenger-form-group">
-              <label>Source</label>
-              <input
-                type="text"
-                placeholder="Ex: Canberra City"
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-              />
+          <form className="passenger-form" onSubmit={handleBookTicket}>
+            <div className="passenger-input-group">
+              <label>Select Route</label>
+              <select
+                value={selectedRouteId}
+                onChange={(e) => setSelectedRouteId(e.target.value)}
+                required
+              >
+                {routes.map((route) => (
+                  <option key={route.id} value={route.id}>
+                    {route.route_name} - ${route.fare}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="passenger-form-group">
-              <label>Destination</label>
-              <input
-                type="text"
-                placeholder="Ex: Belconnen"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-              />
-            </div>
-
-            <div className="passenger-form-group">
+            <div className="passenger-input-group">
               <label>Travel Date</label>
               <input
-                type="text"
+                type="date"
                 value={travelDate}
                 onChange={(e) => setTravelDate(e.target.value)}
-                placeholder="06 Apr 2026"
+                required
               />
             </div>
 
-            <div className="passenger-form-group">
-              <label>Departure Time</label>
-              <select
-                value={departureTime}
-                onChange={(e) => setDepartureTime(e.target.value)}
-              >
-                <option>08:30 AM</option>
-                <option>10:00 AM</option>
-                <option>11:20 AM</option>
-                <option>02:00 PM</option>
-              </select>
-            </div>
-
-            <div className="passenger-form-group">
-              <label>Passenger Name</label>
+            <div className="passenger-input-group">
+              <label>Seats</label>
               <input
-                type="text"
-                placeholder="Enter your name"
-                value={passengerName}
-                onChange={(e) => setPassengerName(e.target.value)}
+                type="number"
+                min="1"
+                max="10"
+                value={seats}
+                onChange={(e) => setSeats(e.target.value)}
+                required
               />
             </div>
 
-            <div className="passenger-form-group">
-              <label>Seat Type</label>
-              <select
-                value={seatType}
-                onChange={(e) => setSeatType(e.target.value)}
-              >
-                <option>Standard</option>
-                <option>Window</option>
-                <option>Priority</option>
-              </select>
-            </div>
-
-            <div className="passenger-form-group full-width">
-              <label>Payment Method</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              >
-                <option>Card Payment</option>
-                <option>Wallet</option>
-                <option>Cash on Counter</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="action-row">
-            <button className="passenger-btn" onClick={handleConfirmBooking}>
+            <button className="passenger-btn" type="submit" disabled={booking}>
               <FaTicketAlt />
-              Confirm Booking
+              {booking ? "Booking..." : "Book Ticket"}
             </button>
-          </div>
-
-          {successMessage && <div className="passenger-success">{successMessage}</div>}
+          </form>
         </div>
 
-        <div className="passenger-page-panel">
-          <div className="passenger-info-card">
-            <h3>Trip Summary</h3>
-
-            <div className="passenger-info-list">
-              <div className="passenger-info-item">
-                <FaMapMarkedAlt />
-                <span>
-                  {source || "Canberra City"} → {destination || "Belconnen"}
-                </span>
-              </div>
-
-              <div className="passenger-info-item">
-                <FaCalendarAlt />
-                <span>{travelDate || "06 Apr 2026"} • {departureTime}</span>
-              </div>
-
-              <div className="passenger-info-item">
-                <FaBusAlt />
-                <span>{selectedTrip?.bus || "Express Line 1"}</span>
-              </div>
-
-              <div className="passenger-info-item">
-                <FaCreditCard />
-                <span>Estimated Fare: $4.50</span>
-              </div>
-
-              <div className="passenger-info-item">
-                <FaArrowRight />
-                <span>{selectedTrip?.stop || "Platform 3"} • 12 seats available</span>
-              </div>
+        <div className="passenger-panel">
+          <div className="passenger-panel-head">
+            <div>
+              <span className="passenger-badge">Preview</span>
+              <h2>Ticket Summary</h2>
             </div>
           </div>
+
+          {selectedRoute ? (
+            <div className="passenger-ticket-preview">
+              <div className="passenger-ticket-route">
+                <h3>{selectedRoute.route_name}</h3>
+                <p>
+                  {selectedRoute.source} → {selectedRoute.destination}
+                </p>
+              </div>
+
+              <div className="passenger-info-list">
+                <div className="passenger-info-item">
+                  <FaClock />
+                  <span>
+                    {formatTime(selectedRoute.departure_time)} -{" "}
+                    {formatTime(selectedRoute.arrival_time)}
+                  </span>
+                </div>
+
+                <div className="passenger-info-item">
+                  <FaCalendarAlt />
+                  <span>{travelDate || "Select date"}</span>
+                </div>
+
+                <div className="passenger-info-item">
+                  <FaChair />
+                  <span>{seats} seat(s)</span>
+                </div>
+
+                <div className="passenger-info-item">
+                  <FaBusAlt />
+                  <span>Fare per seat: ${selectedRoute.fare}</span>
+                </div>
+
+                <div className="passenger-info-item">
+                  <FaMapMarkedAlt />
+                  <span>
+                    Stops:{" "}
+                    {selectedRoute.stops && selectedRoute.stops.length > 0
+                      ? selectedRoute.stops.join(", ")
+                      : "No stops listed"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="passenger-total-box">
+                <span>Total Amount</span>
+                <strong>${totalAmount.toFixed(2)}</strong>
+              </div>
+            </div>
+          ) : (
+            <p>No route selected.</p>
+          )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -1,234 +1,330 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "./PassengerDashboard.css";
-import { useNavigate } from "react-router-dom";
 import {
   FaBusAlt,
   FaCalendarAlt,
-  FaMapMarkedAlt,
-  FaTicketAlt,
   FaClock,
-  FaArrowRight,
-  FaSearch,
+  FaMapMarkedAlt,
   FaRoute,
-  FaDownload,
-  FaPlusCircle,
+  FaSyncAlt,
+  FaTicketAlt,
+  FaWallet,
 } from "react-icons/fa";
+import {
+  formatDate,
+  formatTime,
+  getPassengerBookings,
+  getPassengerRoutes,
+  type PassengerBooking,
+  type PassengerRoute,
+} from "../../services/passengerApi";
 
 export default function PassengerDashboard() {
-  const navigate = useNavigate();
-
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const passengerName =
-    JSON.parse(localStorage.getItem("user") || "{}")?.fullName || "Passenger";
+    storedUser?.full_name || storedUser?.fullName || "Passenger";
 
-  const savedBookings = JSON.parse(localStorage.getItem("bookings") || "[]");
+  const [routes, setRoutes] = useState<PassengerRoute[]>([]);
+  const [bookings, setBookings] = useState<PassengerBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const stats = [
-    { title: "Active Bookings", value: String(savedBookings.length).padStart(2, "0"), icon: <FaTicketAlt /> },
-    { title: "Upcoming Trips", value: "02", icon: <FaCalendarAlt /> },
-    { title: "Saved Routes", value: "05", icon: <FaRoute /> },
-    { title: "Travel Points", value: "120", icon: <FaBusAlt /> },
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const routeData = await getPassengerRoutes();
+      const bookingData = await getPassengerBookings();
+
+      setRoutes(routeData);
+      setBookings(bookingData);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to load passenger dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const activeBookings = bookings.filter(
+    (booking) => booking.booking_status === "Booked"
+  );
+
+  const cancelledBookings = bookings.filter(
+    (booking) => booking.booking_status === "Cancelled"
+  );
+
+  const totalSpent = bookings
+    .filter((booking) => booking.booking_status !== "Cancelled")
+    .reduce((sum, booking) => sum + Number(booking.total_amount), 0);
+
+  const upcomingBooking = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    return (
+      bookings
+        .filter(
+          (booking) =>
+            booking.booking_status === "Booked" &&
+            booking.travel_date >= today
+        )
+        .sort((a, b) => a.travel_date.localeCompare(b.travel_date))[0] || null
+    );
+  }, [bookings]);
+
+  const nextRoute = routes[0] || null;
+
+  const dashboardCards = [
+    {
+      title: "Available Routes",
+      value: routes.length,
+      icon: <FaRoute />,
+    },
+    {
+      title: "My Bookings",
+      value: bookings.length,
+      icon: <FaTicketAlt />,
+    },
+    {
+      title: "Active Tickets",
+      value: activeBookings.length,
+      icon: <FaBusAlt />,
+    },
+    {
+      title: "Total Spent",
+      value: `$${totalSpent.toFixed(2)}`,
+      icon: <FaWallet />,
+    },
   ];
+
+  if (loading) {
+    return (
+      <div className="passenger-dashboard">
+        <section className="passenger-dashboard-panel">
+          <h2>Loading passenger dashboard...</h2>
+        </section>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="passenger-dashboard">
+        <section className="passenger-dashboard-panel">
+          <h2>Something went wrong</h2>
+          <p>{errorMessage}</p>
+          <button className="passenger-dashboard-btn" onClick={loadDashboardData}>
+            Try Again
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="passenger-dashboard">
-      <section className="passenger-hero">
+      <section className="passenger-dashboard-hero">
         <div>
-          <p className="eyebrow">Passenger dashboard</p>
+          <span className="passenger-dashboard-badge">Passenger Dashboard</span>
           <h1>Welcome back, {passengerName}</h1>
-          <p className="dashboard-subtext">
-            Manage your trips, view bookings, and quickly find the next available
-            bus route across Canberra.
+          <p>
+            Book tickets, view available routes, check your bookings, and manage
+            your travel using data from the MySQL backend.
           </p>
         </div>
 
-        <div className="passenger-hero-actions">
-          <button
-            className="dashboard-primary-btn"
-            onClick={() => navigate("/passenger/book-ticket")}
-          >
-            <FaPlusCircle />
-            Book New Trip
-          </button>
-
-          <button
-            className="dashboard-secondary-btn"
-            onClick={() => navigate("/passenger/bookings")}
-          >
-            <FaDownload />
-            View My Bookings
-          </button>
-        </div>
+        <button className="passenger-dashboard-btn light" onClick={loadDashboardData}>
+          <FaSyncAlt />
+          Refresh
+        </button>
       </section>
 
-      <section className="passenger-stats-grid">
-        {stats.map((item) => (
-          <div className="passenger-stat-card" key={item.title}>
-            <div className="passenger-stat-icon">{item.icon}</div>
+      <section className="passenger-dashboard-stats">
+        {dashboardCards.map((card) => (
+          <div className="passenger-dashboard-card" key={card.title}>
+            <div className="passenger-dashboard-icon">{card.icon}</div>
             <div>
-              <h3>{item.value}</h3>
-              <p>{item.title}</p>
+              <h3>{card.value}</h3>
+              <p>{card.title}</p>
             </div>
           </div>
         ))}
       </section>
 
-      <section className="passenger-main-grid">
-        <div className="dashboard-panel">
-          <div className="panel-head">
+      <section className="passenger-dashboard-grid">
+        <div className="passenger-dashboard-panel">
+          <div className="passenger-dashboard-panel-head">
             <div>
-              <p className="eyebrow">Next trip</p>
-              <h2>Your upcoming journey</h2>
+              <span className="passenger-dashboard-badge">Upcoming Travel</span>
+              <h2>Next Booking</h2>
             </div>
           </div>
 
-          <div className="next-trip-card">
-            <div className="trip-route-row">
-              <div>
-                <span className="trip-label">From</span>
-                <h3>Canberra City</h3>
+          {upcomingBooking ? (
+            <div className="passenger-dashboard-trip-card">
+              <h3>{upcomingBooking.route_name}</h3>
+              <p>
+                {upcomingBooking.source} → {upcomingBooking.destination}
+              </p>
+
+              <div className="passenger-dashboard-info-list">
+                <span>
+                  <FaCalendarAlt />
+                  Travel Date: {formatDate(upcomingBooking.travel_date)}
+                </span>
+
+                <span>
+                  <FaClock />
+                  {formatTime(upcomingBooking.departure_time)} -{" "}
+                  {formatTime(upcomingBooking.arrival_time)}
+                </span>
+
+                <span>
+                  <FaTicketAlt />
+                  {upcomingBooking.seats} seat(s)
+                </span>
+
+                <span>
+                  <FaWallet />${Number(upcomingBooking.total_amount).toFixed(2)}
+                </span>
               </div>
 
-              <FaArrowRight className="trip-arrow" />
-
-              <div>
-                <span className="trip-label">To</span>
-                <h3>Belconnen</h3>
-              </div>
+              <Link to="/passenger/bookings" className="passenger-dashboard-btn">
+                View My Bookings
+              </Link>
             </div>
-
-            <div className="trip-meta-grid">
-              <div className="trip-meta-item">
-                <FaCalendarAlt />
-                <span>06 Apr 2026</span>
-              </div>
-              <div className="trip-meta-item">
-                <FaClock />
-                <span>08:30 AM</span>
-              </div>
-              <div className="trip-meta-item">
-                <FaBusAlt />
-                <span>Express Line 1</span>
-              </div>
-              <div className="trip-meta-item">
-                <FaMapMarkedAlt />
-                <span>Platform 3</span>
-              </div>
+          ) : (
+            <div className="passenger-dashboard-empty">
+              <FaTicketAlt />
+              <h3>No upcoming booking</h3>
+              <p>Book a ticket to see your next trip here.</p>
+              <Link to="/passenger/book" className="passenger-dashboard-btn">
+                Book Ticket
+              </Link>
             </div>
-
-            <div className="trip-status-row">
-              <span className="status-pill confirmed">Confirmed</span>
-              <button
-                className="dashboard-primary-btn small-btn"
-                onClick={() => navigate("/passenger/bookings")}
-              >
-                View Ticket
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
-        <div className="dashboard-panel">
-          <div className="panel-head">
+        <div className="passenger-dashboard-panel">
+          <div className="passenger-dashboard-panel-head">
             <div>
-              <p className="eyebrow">Quick search</p>
-              <h2>Find a route</h2>
+              <span className="passenger-dashboard-badge">Route Info</span>
+              <h2>Next Available Route</h2>
             </div>
           </div>
 
-          <div className="dashboard-search-box">
-            <div className="dashboard-input-group">
-              <label>Source</label>
-              <input type="text" placeholder="Ex: Canberra City" />
-            </div>
+          {nextRoute ? (
+            <div className="passenger-dashboard-trip-card">
+              <h3>{nextRoute.route_name}</h3>
+              <p>
+                {nextRoute.source} → {nextRoute.destination}
+              </p>
 
-            <div className="dashboard-input-group">
-              <label>Destination</label>
-              <input type="text" placeholder="Ex: Belconnen" />
-            </div>
+              <div className="passenger-dashboard-info-list">
+                <span>
+                  <FaClock />
+                  {formatTime(nextRoute.departure_time)} -{" "}
+                  {formatTime(nextRoute.arrival_time)}
+                </span>
 
-            <div className="dashboard-input-group">
-              <label>Date</label>
-              <input type="date" />
-            </div>
+                <span>
+                  <FaWallet />${Number(nextRoute.fare).toFixed(2)}
+                </span>
 
-            <button
-              className="dashboard-primary-btn full-btn"
-              onClick={() => navigate("/passenger/schedule")}
-            >
-              <FaSearch />
-              Search Route
-            </button>
-          </div>
+                <span>
+                  <FaMapMarkedAlt />
+                  {nextRoute.stops.length} stop(s)
+                </span>
+
+                <span>
+                  <FaBusAlt />
+                  Status: {nextRoute.status}
+                </span>
+              </div>
+
+              <Link to="/passenger/schedule" className="passenger-dashboard-btn">
+                View Schedule
+              </Link>
+            </div>
+          ) : (
+            <div className="passenger-dashboard-empty">
+              <FaRoute />
+              <h3>No active routes</h3>
+              <p>There are no active routes available right now.</p>
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="passenger-bottom-grid">
-        <div className="dashboard-panel">
-          <div className="panel-head">
+      <section className="passenger-dashboard-grid">
+        <div className="passenger-dashboard-panel">
+          <div className="passenger-dashboard-panel-head">
             <div>
-              <p className="eyebrow">My bookings</p>
-              <h2>Recent bookings</h2>
+              <span className="passenger-dashboard-badge">Quick Actions</span>
+              <h2>Passenger Tools</h2>
             </div>
           </div>
 
-          <div className="bookings-list">
-            {savedBookings.length === 0 ? (
-              <div className="booking-row">
-                <div className="booking-main">
-                  <h3>No bookings yet</h3>
-                  <p>Book a trip to see it here.</p>
-                </div>
-              </div>
-            ) : (
-              savedBookings.slice(0, 3).map((booking: any, index: number) => (
-                <div className="booking-row" key={index}>
-                  <div className="booking-main">
-                    <h3>
-                      {booking.source} → {booking.destination}
-                    </h3>
-                    <p>
-                      {booking.travelDate} • {booking.departureTime}
-                    </p>
-                  </div>
+          <div className="passenger-dashboard-actions">
+            <Link to="/passenger/book" className="passenger-dashboard-action-card">
+              <FaTicketAlt />
+              <h3>Book Ticket</h3>
+              <p>Create a new ticket and save it in the bookings table.</p>
+            </Link>
 
-                  <span className="status-pill confirmed">Confirmed</span>
-                </div>
-              ))
-            )}
+            <Link
+              to="/passenger/schedule"
+              className="passenger-dashboard-action-card"
+            >
+              <FaBusAlt />
+              <h3>Bus Schedule</h3>
+              <p>View active routes, fares, stops, and departure times.</p>
+            </Link>
+
+            <Link
+              to="/passenger/bookings"
+              className="passenger-dashboard-action-card"
+            >
+              <FaCalendarAlt />
+              <h3>My Bookings</h3>
+              <p>Check your booked, cancelled, and completed tickets.</p>
+            </Link>
           </div>
         </div>
 
-        <div className="dashboard-panel">
-          <div className="panel-head">
+        <div className="passenger-dashboard-panel">
+          <div className="passenger-dashboard-panel-head">
             <div>
-              <p className="eyebrow">Quick actions</p>
-              <h2>What would you like to do?</h2>
+              <span className="passenger-dashboard-badge">Summary</span>
+              <h2>Booking Status</h2>
             </div>
           </div>
 
-          <div className="quick-actions-grid">
-            <a href="/passenger/book-ticket" className="quick-action-card">
-              <FaTicketAlt className="quick-action-icon" />
-              <h3>Book Ticket</h3>
-              <p>Reserve your next trip quickly and easily.</p>
-            </a>
+          <div className="passenger-dashboard-summary-list">
+            <div className="passenger-dashboard-summary-item">
+              <span>Total bookings</span>
+              <strong>{bookings.length}</strong>
+            </div>
 
-            <a href="/passenger/bookings" className="quick-action-card">
-              <FaCalendarAlt className="quick-action-icon" />
-              <h3>My Bookings</h3>
-              <p>Review your travel history and active reservations.</p>
-            </a>
+            <div className="passenger-dashboard-summary-item">
+              <span>Active bookings</span>
+              <strong>{activeBookings.length}</strong>
+            </div>
 
-            <a href="/passenger/schedule" className="quick-action-card">
-              <FaBusAlt className="quick-action-icon" />
-              <h3>Bus Schedule</h3>
-              <p>Check route timing and daily departure details.</p>
-            </a>
+            <div className="passenger-dashboard-summary-item">
+              <span>Cancelled bookings</span>
+              <strong>{cancelledBookings.length}</strong>
+            </div>
 
-            <a href="/" className="quick-action-card">
-              <FaMapMarkedAlt className="quick-action-icon" />
-              <h3>Explore Routes</h3>
-              <p>Search available routes across Canberra.</p>
-            </a>
+            <div className="passenger-dashboard-summary-item">
+              <span>Available routes</span>
+              <strong>{routes.length}</strong>
+            </div>
           </div>
         </div>
       </section>

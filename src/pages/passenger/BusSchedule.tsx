@@ -1,85 +1,215 @@
+import { useEffect, useMemo, useState } from "react";
 import "./PassengerPages.css";
-import { useNavigate } from "react-router-dom";
-import { FaBusAlt, FaClock, FaMapMarkedAlt, FaCalendarAlt } from "react-icons/fa";
+import {
+  FaBusAlt,
+  FaClock,
+  FaMapMarkedAlt,
+  FaSearch,
+  FaSyncAlt,
+  FaTicketAlt,
+} from "react-icons/fa";
+import {
+  formatTime,
+  getPassengerRoutes,
+  type PassengerRoute,
+} from "../../services/passengerApi";
 
 export default function BusSchedule() {
-  const navigate = useNavigate();
+  const [routes, setRoutes] = useState<PassengerRoute[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRoute, setSelectedRoute] = useState<PassengerRoute | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const schedules = [
-    {
-      route: "Canberra City",
-      destination: "Belconnen",
-      bus: "Express Line 1",
-      time: "08:30 AM",
-      date: "06 Apr 2026",
-      stop: "Platform 3",
-    },
-    {
-      route: "ANU",
-      destination: "Civic",
-      bus: "Campus Shuttle",
-      time: "10:00 AM",
-      date: "06 Apr 2026",
-      stop: "Stop B2",
-    },
-    {
-      route: "Woden",
-      destination: "Airport",
-      bus: "Airport Connect",
-      time: "11:20 AM",
-      date: "06 Apr 2026",
-      stop: "Gate 4",
-    },
-  ];
+  const loadRoutes = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
 
-  const handleBookNow = (item: any) => {
-    localStorage.setItem("selectedTrip", JSON.stringify(item));
-    navigate("/passenger/book-ticket");
+      const data = await getPassengerRoutes();
+      setRoutes(data);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to load bus schedule");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadRoutes();
+  }, []);
+
+  const filteredRoutes = useMemo(() => {
+    const search = searchTerm.toLowerCase();
+
+    return routes.filter((route) => {
+      return (
+        route.route_name.toLowerCase().includes(search) ||
+        route.source.toLowerCase().includes(search) ||
+        route.destination.toLowerCase().includes(search) ||
+        route.stops.some((stop) => stop.toLowerCase().includes(search))
+      );
+    });
+  }, [routes, searchTerm]);
+
+  if (loading) {
+    return (
+      <div className="passenger-page">
+        <section className="passenger-panel">
+          <h2>Loading bus schedule...</h2>
+        </section>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="passenger-page">
+        <section className="passenger-panel">
+          <h2>Something went wrong</h2>
+          <p>{errorMessage}</p>
+          <button className="passenger-btn" onClick={loadRoutes}>
+            Try Again
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="passenger-page">
-      <section className="passenger-page-hero">
+      <section className="passenger-hero">
         <div>
-          <span className="passenger-page-badge">Passenger Services</span>
+          <span className="passenger-badge">Passenger Services</span>
           <h1>Bus Schedule</h1>
           <p>
-            Check upcoming bus departures, route timing, and stop information
-            for your next trip across Canberra.
+            View active Canberra Bus routes, departure times, fares, and stop
+            lists directly from the MySQL routes table.
           </p>
         </div>
+
+        <button className="passenger-btn light" onClick={loadRoutes}>
+          <FaSyncAlt />
+          Refresh Schedule
+        </button>
       </section>
 
-      <section className="passenger-page-panel">
-        <h2>Available Schedules</h2>
-        <p>Browse the latest departures and route timing below.</p>
+      <section className="passenger-panel">
+        <div className="passenger-panel-head">
+          <div>
+            <span className="passenger-badge">MySQL Data</span>
+            <h2>Available Routes</h2>
+          </div>
 
-        <div className="schedule-list">
-          {schedules.map((item, index) => (
-            <div className="schedule-card" key={index}>
-              <div className="schedule-top">
-                <h3>
-                  {item.route} → {item.destination}
-                </h3>
-                <span className="status-pill confirmed">On Time</span>
-              </div>
-
-              <div className="schedule-meta">
-                <span><FaBusAlt /> {item.bus}</span>
-                <span><FaClock /> {item.time}</span>
-                <span><FaCalendarAlt /> {item.date}</span>
-                <span><FaMapMarkedAlt /> {item.stop}</span>
-              </div>
-
-              <div className="action-row">
-                <button className="passenger-btn" onClick={() => handleBookNow(item)}>
-                  Book Now
-                </button>
-              </div>
-            </div>
-          ))}
+          <strong>{filteredRoutes.length} route(s)</strong>
         </div>
+
+        <div className="passenger-filter-bar">
+          <div className="passenger-search-box">
+            <FaSearch />
+            <input
+              type="text"
+              placeholder="Search by route, source, destination, or stop"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+        </div>
+
+        {filteredRoutes.length === 0 ? (
+          <div className="passenger-empty-state">
+            <FaBusAlt />
+            <h3>No routes found</h3>
+            <p>Try searching another route, stop, source, or destination.</p>
+          </div>
+        ) : (
+          <div className="passenger-route-list">
+            {filteredRoutes.map((route) => (
+              <div className="passenger-route-card" key={route.id}>
+                <div className="passenger-route-top">
+                  <div>
+                    <h3>{route.route_name}</h3>
+                    <p>
+                      {route.source} → {route.destination}
+                    </p>
+                  </div>
+
+                  <span className="passenger-status passenger-status-booked">
+                    {route.status}
+                  </span>
+                </div>
+
+                <div className="passenger-route-meta">
+                  <span>
+                    <FaClock />
+                    {formatTime(route.departure_time)} -{" "}
+                    {formatTime(route.arrival_time)}
+                  </span>
+
+                  <span>
+                    <FaTicketAlt />${Number(route.fare).toFixed(2)}
+                  </span>
+
+                  <span>
+                    <FaMapMarkedAlt />
+                    {route.stops.length} stop(s)
+                  </span>
+                </div>
+
+                <div className="passenger-route-actions">
+                  <button
+                    className="passenger-btn secondary"
+                    onClick={() => setSelectedRoute(route)}
+                  >
+                    View Stops
+                  </button>
+
+                  <a className="passenger-btn" href="/passenger/book">
+                    <FaTicketAlt />
+                    Book Ticket
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
+
+      {selectedRoute && (
+        <div
+          className="passenger-modal-backdrop"
+          onClick={() => setSelectedRoute(null)}
+        >
+          <div
+            className="passenger-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="passenger-modal-head">
+              <div>
+                <span className="passenger-badge">Route Stops</span>
+                <h2>{selectedRoute.route_name}</h2>
+              </div>
+
+              <button
+                className="passenger-modal-close"
+                onClick={() => setSelectedRoute(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <ol className="passenger-stop-list">
+              {selectedRoute.stops.length > 0 ? (
+                selectedRoute.stops.map((stop) => <li key={stop}>{stop}</li>)
+              ) : (
+                <li>No stops available for this route.</li>
+              )}
+            </ol>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

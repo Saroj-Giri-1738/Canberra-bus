@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./DriverDashboard.css";
 import {
@@ -15,34 +15,62 @@ import {
   FaTools,
 } from "react-icons/fa";
 import {
-  formatToday,
-  getDriverRoutes,
-  getTodayAttendance,
-  markTodayAttendance,
-  updateDriverRoute,
-  type DriverRoute,
-} from "../../data/driverData";
+  getDriverAssignments,
+  getDriverAttendance,
+  markDriverAttendance,
+  updateDriverAssignment,
+  formatTime,
+  type DriverAssignment,
+  type AttendanceRecord,
+} from "../../services/driverApi";
 
 export default function DriverDashboard() {
-  const driverName =
-    JSON.parse(localStorage.getItem("user") || "{}")?.fullName || "Driver";
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const driverName = storedUser?.full_name || storedUser?.fullName || "Driver";
 
-  const [routes, setRoutes] = useState<DriverRoute[]>(getDriverRoutes());
-  const [attendance, setAttendance] = useState(getTodayAttendance());
+  const [assignments, setAssignments] = useState<DriverAssignment[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const assignmentData = await getDriverAssignments();
+      const attendanceData = await getDriverAttendance();
+
+      setAssignments(assignmentData);
+      setAttendance(attendanceData.today);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to load driver dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
   const nextTrip =
-    routes.find((route) => route.status === "In Progress") ||
-    routes.find((route) => route.status === "Confirmed") ||
-    routes.find((route) => route.status === "Pending") ||
-    routes[0];
+    assignments.find((item) => item.assignment_status === "In Progress") ||
+    assignments.find((item) => item.assignment_status === "Confirmed") ||
+    assignments.find((item) => item.assignment_status === "Pending") ||
+    assignments[0];
 
-  const completedRoutes = routes.filter(
-    (route) => route.status === "Completed"
+  const completedRoutes = assignments.filter(
+    (item) => item.assignment_status === "Completed"
   );
 
-  const activeRoutes = routes.filter((route) => route.status !== "Completed");
+  const activeRoutes = assignments.filter(
+    (item) => item.assignment_status !== "Completed"
+  );
 
-  const inspectionsDone = routes.filter((route) => route.inspectionDone).length;
+  const inspectionsDone = assignments.filter(
+    (item) => Number(item.inspection_done) === 1
+  ).length;
 
   const dashboardStatus = useMemo(() => {
     if (!attendance) {
@@ -56,24 +84,29 @@ export default function DriverDashboard() {
     if (attendance.status === "Absent") {
       return {
         title: "Marked Absent",
-        message: `Attendance recorded at ${attendance.markedAt}.`,
+        message: `Attendance recorded at ${new Date(
+          attendance.marked_at
+        ).toLocaleTimeString("en-AU", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}.`,
         pill: "Unavailable",
       };
     }
 
-    if (nextTrip?.status === "In Progress") {
+    if (nextTrip?.assignment_status === "In Progress") {
       return {
         title: "Route In Progress",
-        message: `${nextTrip.routeName} is currently active.`,
+        message: `${nextTrip.route_name} is currently active.`,
         pill: "Driving",
       };
     }
 
     return {
       title: "Ready for Duty",
-      message: `Attendance recorded at ${
-        attendance.markedAt
-      } • Next trip starts at ${nextTrip?.departureTime || "N/A"}`,
+      message: nextTrip
+        ? `Next trip starts at ${formatTime(nextTrip.departure_time)}`
+        : "No assigned trip remaining today.",
       pill: "On Schedule",
     };
   }, [attendance, nextTrip]);
@@ -81,7 +114,7 @@ export default function DriverDashboard() {
   const stats = [
     {
       title: "Assigned Routes",
-      value: String(routes.length).padStart(2, "0"),
+      value: String(assignments.length).padStart(2, "0"),
       icon: <FaRoute />,
     },
     {
@@ -104,40 +137,97 @@ export default function DriverDashboard() {
   const alerts = [
     !attendance && "Attendance is not marked for today.",
     nextTrip &&
-      !nextTrip.inspectionDone &&
-      `Pre-trip inspection pending for ${nextTrip.busNumber}.`,
+      Number(nextTrip.inspection_done) === 0 &&
+      `Pre-trip inspection pending for ${nextTrip.bus_number}.`,
     nextTrip &&
-      `${nextTrip.routeName} departs at ${nextTrip.departureTime} from ${nextTrip.platform}.`,
-    routes.some((route) => route.status === "Pending") &&
+      `${nextTrip.route_name} departs at ${formatTime(
+        nextTrip.departure_time
+      )}.`,
+    assignments.some((item) => item.assignment_status === "Pending") &&
       "You still have pending routes to confirm before departure.",
   ].filter(Boolean) as string[];
 
-  const handleAttendance = () => {
-    const updatedAttendance = markTodayAttendance("Present");
-    setAttendance(updatedAttendance);
+  const handleMarkPresent = async () => {
+    try {
+      await markDriverAttendance("Present");
+      await loadDashboardData();
+    } catch (error: any) {
+      alert(error.message || "Failed to mark attendance");
+    }
   };
 
-  const handleStartRoute = () => {
-    if (!nextTrip || attendance?.status !== "Present") return;
-
-    const updatedRoutes = updateDriverRoute(nextTrip.id, {
-      status: "In Progress",
-      inspectionDone: true,
-    });
-
-    setRoutes(updatedRoutes);
-  };
-
-  const handleCompleteRoute = () => {
+  const handleStartRoute = async () => {
     if (!nextTrip) return;
 
-    const updatedRoutes = updateDriverRoute(nextTrip.id, {
-      status: "Completed",
-      inspectionDone: true,
-    });
+    if (attendance?.status !== "Present") {
+      alert("Please mark yourself present before starting a route.");
+      return;
+    }
 
-    setRoutes(updatedRoutes);
+    try {
+      await updateDriverAssignment(nextTrip.assignment_id, {
+        status: "In Progress",
+        inspection_done: true,
+      });
+
+      await loadDashboardData();
+    } catch (error: any) {
+      alert(error.message || "Failed to start route");
+    }
   };
+
+  const handleCompleteRoute = async () => {
+    if (!nextTrip) return;
+
+    try {
+      await updateDriverAssignment(nextTrip.assignment_id, {
+        status: "Completed",
+        inspection_done: true,
+      });
+
+      await loadDashboardData();
+    } catch (error: any) {
+      alert(error.message || "Failed to complete route");
+    }
+  };
+
+  const handleVehicleCheck = async () => {
+    if (!nextTrip) return;
+
+    try {
+      await updateDriverAssignment(nextTrip.assignment_id, {
+        inspection_done: true,
+      });
+
+      await loadDashboardData();
+    } catch (error: any) {
+      alert(error.message || "Failed to update vehicle inspection");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="driver-dashboard">
+        <div className="driver-panel">
+          <h2>Loading driver dashboard...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="driver-dashboard">
+        <div className="driver-panel">
+          <h2>Something went wrong</h2>
+          <p>{errorMessage}</p>
+          <button className="driver-primary-btn" onClick={loadDashboardData}>
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="driver-dashboard">
@@ -147,11 +237,11 @@ export default function DriverDashboard() {
           <h1>Welcome back, {driverName}</h1>
           <p className="driver-dashboard-subtext">
             Manage assigned routes, attendance, vehicle checks, and daily trip
-            progress from one functional dashboard.
+            progress using your MySQL backend.
           </p>
 
           {!attendance && (
-            <button className="driver-hero-action" onClick={handleAttendance}>
+            <button className="driver-hero-action" onClick={handleMarkPresent}>
               <FaUserCheck />
               Mark Present
             </button>
@@ -206,31 +296,34 @@ export default function DriverDashboard() {
               <div className="driver-trip-meta-grid">
                 <div className="driver-trip-meta-item">
                   <FaCalendarAlt />
-                  <span>{formatToday()}</span>
+                  <span>{nextTrip.assignment_date}</span>
                 </div>
 
                 <div className="driver-trip-meta-item">
                   <FaClock />
                   <span>
-                    {nextTrip.departureTime} - {nextTrip.arrivalTime}
+                    {formatTime(nextTrip.departure_time)} -{" "}
+                    {formatTime(nextTrip.arrival_time)}
                   </span>
                 </div>
 
                 <div className="driver-trip-meta-item">
                   <FaBusAlt />
-                  <span>Bus No. {nextTrip.busNumber}</span>
+                  <span>Bus No. {nextTrip.bus_number}</span>
                 </div>
 
                 <div className="driver-trip-meta-item">
                   <FaMapMarkedAlt />
-                  <span>{nextTrip.platform}</span>
+                  <span>{nextTrip.plate_number || "No plate number"}</span>
                 </div>
               </div>
 
               <div className="driver-trip-footer">
-                <span className="driver-chip success">{nextTrip.status}</span>
+                <span className="driver-chip success">
+                  {nextTrip.assignment_status}
+                </span>
 
-                {nextTrip.status === "In Progress" ? (
+                {nextTrip.assignment_status === "In Progress" ? (
                   <button
                     className="driver-primary-btn"
                     onClick={handleCompleteRoute}
@@ -297,7 +390,7 @@ export default function DriverDashboard() {
             <Link to="/driver/routes" className="driver-quick-card">
               <FaRoute className="driver-quick-icon" />
               <h3>Assigned Routes</h3>
-              <p>Check, start, complete, and reset your route list.</p>
+              <p>Check, start, and complete your assigned route list.</p>
             </Link>
 
             <Link to="/driver/attendance" className="driver-quick-card">
@@ -317,12 +410,7 @@ export default function DriverDashboard() {
 
             <button
               className="driver-quick-card driver-quick-button"
-              onClick={() =>
-                nextTrip &&
-                setRoutes(
-                  updateDriverRoute(nextTrip.id, { inspectionDone: true })
-                )
-              }
+              onClick={handleVehicleCheck}
             >
               <FaTools className="driver-quick-icon" />
               <h3>Vehicle Check</h3>
@@ -355,24 +443,26 @@ export default function DriverDashboard() {
 
             <div className="driver-check-item">
               <FaCheckCircle className="check-ok" />
-              <span>{routes.length} route assignments loaded</span>
+              <span>{assignments.length} route assignments loaded from MySQL</span>
             </div>
 
             <div className="driver-check-item">
               <FaCheckCircle className="check-ok" />
               <span>
-                {completedRoutes.length} of {routes.length} routes completed
+                {completedRoutes.length} of {assignments.length} routes
+                completed
               </span>
             </div>
 
             <div className="driver-check-item">
-              {inspectionsDone === routes.length ? (
+              {inspectionsDone === assignments.length &&
+              assignments.length > 0 ? (
                 <FaCheckCircle className="check-ok" />
               ) : (
                 <FaExclamationCircle className="check-warn" />
               )}
               <span>
-                {inspectionsDone} of {routes.length} vehicle inspections
+                {inspectionsDone} of {assignments.length} vehicle inspections
                 completed
               </span>
             </div>

@@ -2072,3 +2072,22 @@ body {
   border-radius: 14px;
   font-weight: 600;
 }
+.login-role-select {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 14px 0;
+  font-family: inherit;
+  font-size: 15px;
+  color: inherit;
+}
+
+.login-error-box {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}

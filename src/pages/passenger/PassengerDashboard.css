@@ -373,3 +373,260 @@
   border-radius: 14px;
   font-weight: 600;
 }
+.passenger-dashboard {
+  padding: 32px;
+}
+
+.passenger-dashboard-hero {
+  background: linear-gradient(135deg, #0f172a, #2563eb);
+  color: white;
+  border-radius: 28px;
+  padding: 34px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.passenger-dashboard-hero h1 {
+  margin: 10px 0;
+  font-size: 34px;
+}
+
+.passenger-dashboard-hero p {
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.passenger-dashboard-badge {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.passenger-dashboard-hero .passenger-dashboard-badge {
+  color: #bfdbfe;
+}
+
+.passenger-dashboard-btn {
+  border: none;
+  background: #2563eb;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.passenger-dashboard-btn.light {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.passenger-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.passenger-dashboard-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 22px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+}
+
+.passenger-dashboard-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 22px;
+}
+
+.passenger-dashboard-card h3 {
+  margin: 0;
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.passenger-dashboard-card p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.passenger-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.passenger-dashboard-panel {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+}
+
+.passenger-dashboard-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.passenger-dashboard-panel h2 {
+  margin: 6px 0 0;
+  color: #0f172a;
+}
+
+.passenger-dashboard-trip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.passenger-dashboard-trip-card h3 {
+  margin: 0 0 6px;
+  color: #0f172a;
+}
+
+.passenger-dashboard-trip-card p {
+  margin: 0;
+  color: #64748b;
+}
+
+.passenger-dashboard-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.passenger-dashboard-info-list span {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  align-items: center;
+  color: #334155;
+}
+
+.passenger-dashboard-info-list svg {
+  color: #2563eb;
+}
+
+.passenger-dashboard-empty {
+  text-align: center;
+  padding: 32px 18px;
+  color: #64748b;
+}
+
+.passenger-dashboard-empty svg {
+  font-size: 40px;
+  color: #2563eb;
+  margin-bottom: 12px;
+}
+
+.passenger-dashboard-empty h3 {
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.passenger-dashboard-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.passenger-dashboard-action-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px;
+  background: #f8fafc;
+  text-decoration: none;
+  color: inherit;
+  display: grid;
+  gap: 8px;
+}
+
+.passenger-dashboard-action-card svg {
+  color: #2563eb;
+  font-size: 22px;
+}
+
+.passenger-dashboard-action-card h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.passenger-dashboard-action-card p {
+  margin: 0;
+  color: #64748b;
+}
+
+.passenger-dashboard-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.passenger-dashboard-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.passenger-dashboard-summary-item span {
+  color: #334155;
+}
+
+.passenger-dashboard-summary-item strong {
+  font-size: 22px;
+  color: #0f172a;
+}
+
+@media (max-width: 900px) {
+  .passenger-dashboard-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .passenger-dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .passenger-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .passenger-dashboard {
+    padding: 18px;
+  }
+
+  .passenger-dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+}

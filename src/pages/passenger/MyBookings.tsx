@@ -1,98 +1,182 @@
-import "./PassengerPages.css";
-import { FaTicketAlt, FaCalendarAlt, FaBusAlt, FaTrash } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import "./PassengerPages.css";
+import {
+  FaCalendarAlt,
+  FaClock,
+  FaMapMarkedAlt,
+  FaSyncAlt,
+  FaTicketAlt,
+  FaTimesCircle,
+} from "react-icons/fa";
+import {
+  formatDate,
+  formatTime,
+  getPassengerBookings,
+  updatePassengerBookingStatus,
+  type PassengerBooking,
+} from "../../services/passengerApi";
 
 export default function MyBookings() {
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<PassengerBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    const savedBookings = JSON.parse(localStorage.getItem("bookings") || "[]");
-    setBookings(savedBookings);
-  }, []);
+  const loadBookings = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
 
-  const handleDeleteBooking = (id: number) => {
-    const updatedBookings = bookings.filter((booking) => booking.id !== id);
-    setBookings(updatedBookings);
-    localStorage.setItem("bookings", JSON.stringify(updatedBookings));
+      const data = await getPassengerBookings();
+      setBookings(data);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to load bookings");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const totalBookings = bookings.length;
-  const upcomingTrips = bookings.filter((b) => b.status === "Confirmed").length;
-  const completedTrips = bookings.filter((b) => b.status === "Completed").length;
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  const handleCancelBooking = async (bookingId: number) => {
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this booking?"
+    );
+
+    if (!confirmCancel) return;
+
+    try {
+      await updatePassengerBookingStatus(bookingId, "Cancelled");
+      await loadBookings();
+    } catch (error: any) {
+      alert(error.message || "Failed to cancel booking");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="passenger-page">
+        <section className="passenger-panel">
+          <h2>Loading bookings...</h2>
+        </section>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="passenger-page">
+        <section className="passenger-panel">
+          <h2>Something went wrong</h2>
+          <p>{errorMessage}</p>
+          <button className="passenger-btn" onClick={loadBookings}>
+            Try Again
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="passenger-page">
-      <section className="passenger-page-hero">
+      <section className="passenger-hero">
         <div>
-          <span className="passenger-page-badge">Passenger Services</span>
+          <span className="passenger-badge">Passenger Services</span>
           <h1>My Bookings</h1>
           <p>
-            View your current and previous trips, check ticket status, and stay
-            organized with your travel records.
+            View your booked tickets from the MySQL bookings table and cancel
+            tickets if required.
           </p>
         </div>
+
+        <button className="passenger-btn light" onClick={loadBookings}>
+          <FaSyncAlt />
+          Refresh Bookings
+        </button>
       </section>
 
-      <section className="summary-grid">
-        <div className="summary-card">
-          <h3>{String(totalBookings).padStart(2, "0")}</h3>
-          <p>Total Bookings</p>
-        </div>
-        <div className="summary-card">
-          <h3>{String(upcomingTrips).padStart(2, "0")}</h3>
-          <p>Upcoming Trips</p>
-        </div>
-        <div className="summary-card">
-          <h3>{String(completedTrips).padStart(2, "0")}</h3>
-          <p>Completed Trips</p>
-        </div>
-      </section>
+      <section className="passenger-panel">
+        <div className="passenger-panel-head">
+          <div>
+            <span className="passenger-badge">MySQL Data</span>
+            <h2>Booking History</h2>
+          </div>
 
-      <section className="passenger-page-panel">
-        <h2>Booking History</h2>
-        <p>All your ticket reservations and trip records are listed below.</p>
+          <strong>{bookings.length} booking(s)</strong>
+        </div>
 
-        <div className="booking-list">
-          {bookings.length === 0 ? (
-            <div className="booking-card">
-              <div className="booking-top">
-                <h3>No bookings yet</h3>
-              </div>
-              <div className="booking-meta">
-                <span>Book a trip to see it here.</span>
-              </div>
-            </div>
-          ) : (
-            bookings.map((booking, index) => (
-              <div className="booking-card" key={index}>
-                <div className="booking-top">
-                  <h3>
-                    {booking.source} → {booking.destination}
-                  </h3>
-                  <span className="status-pill confirmed">
-                    {booking.status}
+        {bookings.length === 0 ? (
+          <div className="passenger-empty-state">
+            <FaTicketAlt />
+            <h3>No bookings found</h3>
+            <p>Your booked tickets will appear here after you book a route.</p>
+          </div>
+        ) : (
+          <div className="passenger-booking-list">
+            {bookings.map((booking) => (
+              <div className="passenger-booking-card" key={booking.booking_id}>
+                <div className="passenger-booking-top">
+                  <div>
+                    <h3>{booking.route_name}</h3>
+                    <p>
+                      {booking.source} → {booking.destination}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`passenger-status ${
+                      booking.booking_status === "Booked"
+                        ? "passenger-status-booked"
+                        : booking.booking_status === "Cancelled"
+                        ? "passenger-status-cancelled"
+                        : "passenger-status-completed"
+                    }`}
+                  >
+                    {booking.booking_status}
                   </span>
                 </div>
 
-                <div className="booking-meta">
-                  <span><FaCalendarAlt /> {booking.travelDate}</span>
-                  <span><FaTicketAlt /> {booking.departureTime}</span>
-                  <span><FaBusAlt /> {booking.bus}</span>
+                <div className="passenger-booking-meta">
+                  <span>
+                    <FaCalendarAlt />
+                    Travel: {formatDate(booking.travel_date)}
+                  </span>
+
+                  <span>
+                    <FaClock />
+                    {formatTime(booking.departure_time)} -{" "}
+                    {formatTime(booking.arrival_time)}
+                  </span>
+
+                  <span>
+                    <FaTicketAlt />
+                    {booking.seats} seat(s)
+                  </span>
+
+                  <span>
+                    <FaMapMarkedAlt />
+                    Booked on {formatDate(booking.booking_date)}
+                  </span>
                 </div>
 
-                <div className="action-row">
-                  <button
-                    className="passenger-btn secondary"
-                    onClick={() => handleDeleteBooking(booking.id)}
-                  >
-                    <FaTrash />
-                    Delete Booking
-                  </button>
+                <div className="passenger-booking-footer">
+                  <strong>${Number(booking.total_amount).toFixed(2)}</strong>
+
+                  {booking.booking_status === "Booked" && (
+                    <button
+                      className="passenger-btn danger"
+                      onClick={() => handleCancelBooking(booking.booking_id)}
+                    >
+                      <FaTimesCircle />
+                      Cancel Booking
+                    </button>
+                  )}
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
