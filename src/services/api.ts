@@ -2,6 +2,45 @@ const API_BASE_URL = "http://localhost/canberra-bus-backend";
 
 export type UserRole = "admin" | "driver" | "passenger";
 
+export type AuthUser = {
+  id: number;
+  full_name: string;
+  email: string;
+  role: UserRole;
+  phone?: string;
+};
+
+function getUserStorageKey(role?: string): string {
+  if (!role) {
+    const user = getCurrentUser();
+    return user ? `user_${user.role}` : "user";
+  }
+  return `user_${role}`;
+}
+
+export function getCurrentUser(): AuthUser | null {
+  const keys = ["user_admin", "user_driver", "user_passenger"];
+
+  for (const key of keys) {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      try {
+        return JSON.parse(stored) as AuthUser;
+      } catch {
+        localStorage.removeItem(key);
+      }
+    }
+  }
+
+  return null;
+}
+
+export function clearAllUsers(): void {
+  ["user_admin", "user_driver", "user_passenger"].forEach((key) => {
+    localStorage.removeItem(key);
+  });
+}
+
 export async function registerUser(
   fullName: string,
   email: string,
@@ -50,7 +89,8 @@ export async function loginUser(email: string, password: string) {
     throw new Error(data.message || "Login failed");
   }
 
-  localStorage.setItem("user", JSON.stringify(data.user));
+  const user = data.user as AuthUser;
+  localStorage.setItem(getUserStorageKey(user.role), JSON.stringify(user));
 
-  return data.user;
+  return user;
 }

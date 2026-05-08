@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./AdminPages.css";
 import {
   FaPlus,
@@ -8,6 +8,7 @@ import {
   FaTimes,
   FaSave,
   FaBusAlt,
+  FaSearch,
 } from "react-icons/fa";
 import {
   addAdminBus,
@@ -41,6 +42,11 @@ export default function ManageBuses() {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "All" | "Active" | "Maintenance" | "Inactive"
+  >("All");
+
   const loadBuses = async () => {
     try {
       setLoading(true);
@@ -58,6 +64,23 @@ export default function ManageBuses() {
   useEffect(() => {
     loadBuses();
   }, []);
+
+  const filteredBuses = useMemo(() => {
+    return buses.filter((bus) => {
+      const search = searchTerm.toLowerCase();
+
+      const matchesSearch =
+        bus.bus_number.toLowerCase().includes(search) ||
+        (bus.plate_number || "").toLowerCase().includes(search) ||
+        String(bus.id).includes(search) ||
+        String(bus.capacity).includes(search);
+
+      const matchesStatus =
+        statusFilter === "All" || bus.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [buses, searchTerm, statusFilter]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -179,8 +202,7 @@ export default function ManageBuses() {
           <span className="admin-badge">Fleet Management</span>
           <h1>Manage Buses</h1>
           <p>
-            Add, update, delete, and monitor buses stored in the MySQL buses
-            table.
+            Add, update, delete, search, filter, and monitor buses.
           </p>
         </div>
 
@@ -283,7 +305,38 @@ export default function ManageBuses() {
             <h2>Bus List</h2>
           </div>
 
-          <strong>{buses.length} buses</strong>
+          <strong>{filteredBuses.length} buses shown</strong>
+        </div>
+
+        <div className="admin-filter-bar">
+          <div className="admin-search-box">
+            <FaSearch />
+            <input
+              type="text"
+              placeholder="Search by bus number, plate number, ID, or capacity"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+
+          <select
+            className="admin-filter-select"
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(
+                event.target.value as
+                  | "All"
+                  | "Active"
+                  | "Maintenance"
+                  | "Inactive"
+              )
+            }
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Inactive">Inactive</option>
+          </select>
         </div>
 
         <div className="admin-table-wrap">
@@ -301,12 +354,12 @@ export default function ManageBuses() {
             </thead>
 
             <tbody>
-              {buses.length === 0 ? (
+              {filteredBuses.length === 0 ? (
                 <tr>
                   <td colSpan={7}>No buses found.</td>
                 </tr>
               ) : (
-                buses.map((bus) => (
+                filteredBuses.map((bus) => (
                   <tr key={bus.id}>
                     <td>{bus.id}</td>
                     <td>

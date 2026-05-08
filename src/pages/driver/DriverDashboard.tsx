@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getCurrentUser } from "../../services/api";
 import { Link } from "react-router-dom";
 import "./DriverDashboard.css";
 import {
@@ -25,8 +26,8 @@ import {
 } from "../../services/driverApi";
 
 export default function DriverDashboard() {
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const driverName = storedUser?.full_name || storedUser?.fullName || "Driver";
+  const user = getCurrentUser();
+  const driverName = user?.full_name || "Driver";
 
   const [assignments, setAssignments] = useState<DriverAssignment[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord | null>(null);

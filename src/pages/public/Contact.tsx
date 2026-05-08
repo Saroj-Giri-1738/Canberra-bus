@@ -3,105 +3,103 @@ import {
   FaEnvelope,
   FaPhoneAlt,
   FaMapMarkerAlt,
+  FaPaperPlane,
   FaClock,
   FaQuestionCircle,
   FaBusAlt,
   FaUserShield,
-  FaTicketAlt,
-  FaPaperPlane,
 } from "react-icons/fa";
+import { submitContactMessage } from "../../services/passengerApi";
 
 export default function Contact() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newMessage = {
-      id: Date.now(),
-      fullName,
-      email,
-      subject,
-      message,
-      date: new Date().toLocaleString(),
-      status: "New",
-    };
+    if (!fullName.trim() || !email.trim() || !subject.trim() || !message.trim()) {
+      alert("Please fill all contact form fields.");
+      return;
+    }
 
-    const existingMessages = JSON.parse(
-      localStorage.getItem("contactMessages") || "[]"
-    );
+    try {
+      setLoading(true);
 
-    existingMessages.unshift(newMessage);
+      await submitContactMessage({
+        full_name: fullName,
+        email,
+        subject,
+        message,
+      });
 
-    localStorage.setItem("contactMessages", JSON.stringify(existingMessages));
+      alert("Message sent successfully. Admin can now view it in Reports.");
 
-    setFullName("");
-    setEmail("");
-    setSubject("");
-    setMessage("");
-    setSuccessMessage("Your message has been sent successfully.");
-
-    setTimeout(() => {
-      setSuccessMessage("");
-    }, 3000);
+      setFullName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch (error: any) {
+      alert(error.message || "Failed to send message.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="contact-page">
-      <section className="contact-hero-section">
-        <div className="contact-hero-content">
-          <p className="eyebrow">Support & enquiries</p>
-          <h1>Contact Canberra Bus Company</h1>
-          <p className="contact-hero-text">
-            Need help with bookings, route information, support requests, or
-            general enquiries? Our team is here to help passengers, drivers,
-            and administrators.
+      <section className="contact-hero">
+        <div>
+          <span className="contact-badge">Contact Us</span>
+          <h1>Get in touch with Canberra Bus Company</h1>
+          <p>
+            Have a question, complaint, feedback, or support request? Send us a
+            message and our team will review it.
           </p>
         </div>
       </section>
 
       <section className="contact-info-grid">
         <div className="contact-info-card">
-          <FaEnvelope className="contact-info-icon" />
+          <div className="contact-info-icon">
+            <FaEnvelope />
+          </div>
           <h3>Email Us</h3>
           <p>support@canberrabus.com</p>
         </div>
 
         <div className="contact-info-card">
-          <FaPhoneAlt className="contact-info-icon" />
+          <div className="contact-info-icon">
+            <FaPhoneAlt />
+          </div>
           <h3>Call Us</h3>
           <p>+61 123 456 789</p>
         </div>
 
         <div className="contact-info-card">
-          <FaMapMarkerAlt className="contact-info-icon" />
+          <div className="contact-info-icon">
+            <FaMapMarkerAlt />
+          </div>
           <h3>Visit Us</h3>
           <p>Canberra, ACT, Australia</p>
         </div>
-
-        <div className="contact-info-card">
-          <FaClock className="contact-info-icon" />
-          <h3>Support Hours</h3>
-          <p>Mon - Fri, 8:00 AM - 6:00 PM</p>
-        </div>
       </section>
 
-      <section className="contact-main-grid">
-        <div className="contact-form-panel">
-          <p className="eyebrow">Get in touch</p>
+      <section className="contact-content-grid">
+        <div className="contact-form-card">
+          <span className="contact-section-label">Get in touch</span>
           <h2>Send us a message</h2>
-          <p className="contact-panel-text">
+          <p>
             Fill in the form below and our team will get back to you as soon as
             possible.
           </p>
 
           <form className="contact-form" onSubmit={handleSubmit}>
-            <div className="contact-form-grid">
-              <div className="contact-form-group">
+            <div className="contact-form-row">
+              <div className="contact-input-group">
                 <label>Full Name</label>
                 <input
                   type="text"
@@ -112,7 +110,7 @@ export default function Contact() {
                 />
               </div>
 
-              <div className="contact-form-group">
+              <div className="contact-input-group">
                 <label>Email Address</label>
                 <input
                   type="email"
@@ -122,114 +120,70 @@ export default function Contact() {
                   required
                 />
               </div>
-
-              <div className="contact-form-group full-width">
-                <label>Subject</label>
-                <input
-                  type="text"
-                  placeholder="Enter message subject"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="contact-form-group full-width">
-                <label>Message</label>
-                <textarea
-                  placeholder="Write your message here..."
-                  rows={6}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
-                ></textarea>
-              </div>
             </div>
 
-            <button type="submit" className="contact-submit-btn">
-              <FaPaperPlane />
-              Send Message
-            </button>
+            <div className="contact-input-group">
+              <label>Subject</label>
+              <input
+                type="text"
+                placeholder="Enter message subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                required
+              />
+            </div>
 
-            {successMessage && (
-              <div className="contact-success-message">{successMessage}</div>
-            )}
+            <div className="contact-input-group">
+              <label>Message</label>
+              <textarea
+                placeholder="Write your message here..."
+                rows={6}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
+              />
+            </div>
+
+            <button className="contact-submit-btn" type="submit" disabled={loading}>
+              <FaPaperPlane />
+              {loading ? "Sending..." : "Send Message"}
+            </button>
           </form>
         </div>
 
         <div className="contact-side-panel">
-          <div className="contact-help-card">
-            <h3>Support Information</h3>
-            <div className="contact-help-list">
-              <div className="contact-help-item">
-                <FaClock />
-                <span>Response time: within 24 hours</span>
-              </div>
-              <div className="contact-help-item">
-                <FaQuestionCircle />
-                <span>Ticket and booking help available</span>
-              </div>
-              <div className="contact-help-item">
-                <FaBusAlt />
-                <span>Route and schedule assistance</span>
-              </div>
-              <div className="contact-help-item">
-                <FaUserShield />
-                <span>Admin and driver support services</span>
-              </div>
+          <div className="contact-support-card">
+            <h3>Support Topics</h3>
+
+            <div className="contact-support-item">
+              <FaClock />
+              <span>Route and schedule enquiries</span>
             </div>
-          </div>
 
-          <div className="contact-help-card">
-            <h3>Common Enquiry Types</h3>
-            <div className="contact-enquiry-tags">
-              <span>Ticket Booking</span>
-              <span>Route Info</span>
-              <span>Driver Support</span>
-              <span>System Access</span>
-              <span>General Enquiry</span>
-              <span>Complaints</span>
+            <div className="contact-support-item">
+              <FaQuestionCircle />
+              <span>Ticket booking support</span>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="contact-bottom-grid">
-        <div className="contact-location-card">
-          <p className="eyebrow">Office location</p>
-          <h2>Visit our Canberra office</h2>
-          <p>
-            Canberra Bus Company Support Office
-            <br />
-            Canberra, ACT, Australia
-          </p>
-
-          <div className="location-box">
-            <FaMapMarkerAlt className="location-icon" />
-            <span>Main support and administration office</span>
-          </div>
-        </div>
-
-        <div className="contact-faq-card">
-          <p className="eyebrow">Need quick help?</p>
-          <h2>Frequently asked support topics</h2>
-
-          <div className="faq-list">
-            <div className="faq-item">
-              <FaTicketAlt />
-              <span>How do I book a ticket?</span>
-            </div>
-            <div className="faq-item">
+            <div className="contact-support-item">
               <FaBusAlt />
-              <span>How do I check the bus schedule?</span>
+              <span>Route or bus service issues</span>
             </div>
-            <div className="faq-item">
+
+            <div className="contact-support-item">
               <FaUserShield />
-              <span>How do I access driver or admin features?</span>
+              <span>Admin or account support</span>
             </div>
-            <div className="faq-item">
-              <FaEnvelope />
-              <span>How long does support take to respond?</span>
+          </div>
+
+          <div className="contact-support-card">
+            <h3>Common Requests</h3>
+
+            <div className="contact-pill-list">
+              <span>Ticket Issue</span>
+              <span>Driver Support</span>
+              <span>General Feedback</span>
+              <span>Route Complaint</span>
             </div>
           </div>
         </div>

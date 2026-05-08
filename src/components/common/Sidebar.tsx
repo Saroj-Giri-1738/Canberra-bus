@@ -11,6 +11,7 @@ const Sidebar = ({ role }: SidebarProps) => {
       { to: "/passenger/schedule", label: "Bus Schedule" },
       { to: "/passenger/book-ticket", label: "Book Ticket" },
       { to: "/passenger/bookings", label: "My Bookings" },
+      { to: "/passenger/feedback", label: "My Feedback" },
     ],
     driver: [
       { to: "/driver/dashboard", label: "Dashboard" },

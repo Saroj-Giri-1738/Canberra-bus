@@ -77,7 +77,7 @@ export default function BookTicket() {
         seats: Number(seats),
       });
 
-      alert("Ticket booked successfully and saved in MySQL bookings table.");
+      alert("Ticket booked successfully.");
 
       setSeats("1");
     } catch (error: any) {
@@ -118,8 +118,7 @@ export default function BookTicket() {
           <span className="passenger-badge">Passenger Services</span>
           <h1>Book Ticket</h1>
           <p>
-            Select a route, choose your travel date and seats, then save your
-            booking directly into the MySQL bookings table.
+            Select a route, choose your travel date and seats.
           </p>
         </div>
 

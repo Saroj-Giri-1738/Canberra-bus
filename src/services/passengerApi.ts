@@ -1,3 +1,5 @@
+import { getCurrentUser } from "./api";
+
 const API_BASE_URL = "http://localhost/canberra-bus-backend";
 
 export type PassengerRoute = {
@@ -32,13 +34,13 @@ export type PassengerBooking = {
 };
 
 function getLoggedInUser() {
-  const user = localStorage.getItem("user");
+  const user = getCurrentUser();
 
   if (!user) {
     throw new Error("User is not logged in");
   }
 
-  return JSON.parse(user);
+  return user;
 }
 
 export function getPassengerId() {
@@ -98,9 +100,13 @@ export async function createPassengerBooking(booking: {
   return handleResponse(response);
 }
 
-export async function updatePassengerBookingStatus(
+export async function updatePassengerBooking(
   bookingId: number,
-  status: "Booked" | "Cancelled" | "Completed"
+  updates: {
+    travel_date?: string;
+    seats?: number;
+    status?: "Booked" | "Cancelled" | "Completed";
+  }
 ) {
   const passengerId = getPassengerId();
 
@@ -112,11 +118,18 @@ export async function updatePassengerBookingStatus(
     body: JSON.stringify({
       booking_id: bookingId,
       passenger_id: passengerId,
-      status,
+      ...updates,
     }),
   });
 
   return handleResponse(response);
+}
+
+export async function updatePassengerBookingStatus(
+  bookingId: number,
+  status: "Booked" | "Cancelled" | "Completed"
+) {
+  return updatePassengerBooking(bookingId, { status });
 }
 
 export function formatTime(time: string) {
@@ -142,4 +155,63 @@ export function formatDate(date: string) {
     month: "short",
     year: "numeric",
   });
+}
+export async function submitContactMessage(contact: {
+  full_name: string;
+  email: string;
+  subject: string;
+  message: string;
+}) {
+  let passengerId: number | null = null;
+
+  try {
+    const user = getCurrentUser();
+    if (user) {
+      passengerId = user.id || null;
+    }
+  } catch {
+    passengerId = null;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/passenger/feedback.php`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      passenger_id: passengerId,
+      full_name: contact.full_name,
+      email: contact.email,
+      subject: contact.subject,
+      message: contact.message,
+      rating: 5,
+    }),
+  });
+
+  return handleResponse(response);
+}
+export type PassengerFeedback = {
+  id: number;
+  passenger_id: number;
+  full_name: string | null;
+  email: string | null;
+  subject: string | null;
+  message: string;
+  rating: number;
+  admin_response: string | null;
+  response_status: "Pending" | "Responded";
+  responded_at: string | null;
+  created_at: string;
+};
+
+export async function getMyFeedback() {
+  const passengerId = getPassengerId();
+
+  const response = await fetch(
+    `${API_BASE_URL}/passenger/my-feedback.php?passenger_id=${passengerId}`
+  );
+
+  const data = await handleResponse(response);
+
+  return data.feedback as PassengerFeedback[];
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./AdminPages.css";
+import { getCurrentUser } from "../../services/api";
 import {
   FaEdit,
   FaTrash,
@@ -138,7 +139,7 @@ export default function ManageUsers() {
   };
 
   const handleDelete = async (user: AdminUser) => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const storedUser = getCurrentUser();
 
     if (storedUser?.id === user.id) {
       alert("You cannot delete the account you are currently logged in with.");
@@ -197,7 +198,7 @@ export default function ManageUsers() {
           <h1>Manage Users</h1>
           <p>
             View, search, update, and manage admin, driver, and passenger
-            accounts stored in the MySQL users table.
+            accounts.
           </p>
         </div>
 

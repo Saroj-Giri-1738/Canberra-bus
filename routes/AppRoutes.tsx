@@ -14,6 +14,7 @@ import PassengerDashboard from "../src/pages/passenger/PassengerDashboard";
 import BusSchedule from "../src/pages/passenger/BusSchedule";
 import BookTicket from "../src/pages/passenger/BookTicket";
 import MyBookings from "../src/pages/passenger/MyBookings";
+import MyFeedback from "../src/pages/passenger/MyFeedback";
 
 import DriverDashboard from "../src/pages/driver/DriverDashboard";
 import AssignedRoutes from "../src/pages/driver/AssignedRoutes";
@@ -47,6 +48,7 @@ const AppRoutes = () => {
         <Route path="schedule" element={<BusSchedule />} />
         <Route path="book-ticket" element={<BookTicket />} />
         <Route path="bookings" element={<MyBookings />} />
+        <Route path="feedback" element={<MyFeedback />} />
       </Route>
 
       <Route

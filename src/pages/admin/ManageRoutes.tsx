@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./AdminPages.css";
 import {
   FaPlus,
@@ -7,6 +7,7 @@ import {
   FaSyncAlt,
   FaTimes,
   FaSave,
+  FaSearch,
 } from "react-icons/fa";
 import {
   addAdminRoute,
@@ -47,6 +48,11 @@ export default function ManageRoutes() {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"All" | "Active" | "Inactive">(
+    "All"
+  );
+
   const loadRoutes = async () => {
     try {
       setLoading(true);
@@ -64,6 +70,24 @@ export default function ManageRoutes() {
   useEffect(() => {
     loadRoutes();
   }, []);
+
+  const filteredRoutes = useMemo(() => {
+    return routes.filter((route) => {
+      const search = searchTerm.toLowerCase();
+
+      const matchesSearch =
+        route.route_name.toLowerCase().includes(search) ||
+        route.source.toLowerCase().includes(search) ||
+        route.destination.toLowerCase().includes(search) ||
+        String(route.id).includes(search) ||
+        String(route.fare).includes(search);
+
+      const matchesStatus =
+        statusFilter === "All" || route.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [routes, searchTerm, statusFilter]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -201,8 +225,7 @@ export default function ManageRoutes() {
           <span className="admin-badge">Route Management</span>
           <h1>Manage Routes</h1>
           <p>
-            Add, update, delete, and monitor bus routes stored in the MySQL
-            routes table.
+            Add, update, delete, search, filter, and monitor bus routes.
           </p>
         </div>
 
@@ -344,7 +367,31 @@ export default function ManageRoutes() {
             <h2>Route List</h2>
           </div>
 
-          <strong>{routes.length} routes</strong>
+          <strong>{filteredRoutes.length} routes shown</strong>
+        </div>
+
+        <div className="admin-filter-bar">
+          <div className="admin-search-box">
+            <FaSearch />
+            <input
+              type="text"
+              placeholder="Search by route, source, destination, ID, or fare"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+
+          <select
+            className="admin-filter-select"
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as "All" | "Active" | "Inactive")
+            }
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
         </div>
 
         <div className="admin-table-wrap">
@@ -364,12 +411,12 @@ export default function ManageRoutes() {
             </thead>
 
             <tbody>
-              {routes.length === 0 ? (
+              {filteredRoutes.length === 0 ? (
                 <tr>
                   <td colSpan={9}>No routes found.</td>
                 </tr>
               ) : (
-                routes.map((route) => (
+                filteredRoutes.map((route) => (
                   <tr key={route.id}>
                     <td>{route.id}</td>
                     <td>{route.route_name}</td>
@@ -377,7 +424,7 @@ export default function ManageRoutes() {
                     <td>{route.destination}</td>
                     <td>{formatTime(route.departure_time)}</td>
                     <td>{formatTime(route.arrival_time)}</td>
-                    <td>${route.fare}</td>
+                    <td>${Number(route.fare).toFixed(2)}</td>
                     <td>
                       <span
                         className={`admin-status ${

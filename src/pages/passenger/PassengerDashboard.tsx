@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { getCurrentUser } from "../../services/api";
 import "./PassengerDashboard.css";
 import {
   FaBusAlt,
   FaCalendarAlt,
   FaClock,
+  FaCommentDots,
   FaMapMarkedAlt,
   FaRoute,
   FaSyncAlt,
@@ -21,9 +23,9 @@ import {
 } from "../../services/passengerApi";
 
 export default function PassengerDashboard() {
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = getCurrentUser();
   const passengerName =
-    storedUser?.full_name || storedUser?.fullName || "Passenger";
+    user?.full_name || "Passenger";
 
   const [routes, setRoutes] = useState<PassengerRoute[]>([]);
   const [bookings, setBookings] = useState<PassengerBooking[]>([]);
@@ -134,7 +136,7 @@ export default function PassengerDashboard() {
           <h1>Welcome back, {passengerName}</h1>
           <p>
             Book tickets, view available routes, check your bookings, and manage
-            your travel using data from the MySQL backend.
+            your travel .
           </p>
         </div>
 
@@ -203,7 +205,7 @@ export default function PassengerDashboard() {
               <FaTicketAlt />
               <h3>No upcoming booking</h3>
               <p>Book a ticket to see your next trip here.</p>
-              <Link to="/passenger/book" className="passenger-dashboard-btn">
+              <Link to="/passenger/book-ticket" className="passenger-dashboard-btn">
                 Book Ticket
               </Link>
             </div>
@@ -271,7 +273,7 @@ export default function PassengerDashboard() {
           </div>
 
           <div className="passenger-dashboard-actions">
-            <Link to="/passenger/book" className="passenger-dashboard-action-card">
+            <Link to="/passenger/book-ticket" className="passenger-dashboard-action-card">
               <FaTicketAlt />
               <h3>Book Ticket</h3>
               <p>Create a new ticket and save it in the bookings table.</p>
@@ -293,6 +295,15 @@ export default function PassengerDashboard() {
               <FaCalendarAlt />
               <h3>My Bookings</h3>
               <p>Check your booked, cancelled, and completed tickets.</p>
+            </Link>
+
+            <Link
+              to="/passenger/feedback"
+              className="passenger-dashboard-action-card"
+            >
+              <FaCommentDots />
+              <h3>My Feedback</h3>
+              <p>View and manage your feedback and responses.</p>
             </Link>
           </div>
         </div>

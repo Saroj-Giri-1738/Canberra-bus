@@ -1,3 +1,5 @@
+import { getCurrentUser } from "./api";
+
 const API_BASE_URL = "http://localhost/canberra-bus-backend";
 
 export type DriverAssignment = {
@@ -36,13 +38,13 @@ export type AttendanceRecord = {
 };
 
 function getLoggedInUser() {
-  const user = localStorage.getItem("user");
+  const user = getCurrentUser();
 
   if (!user) {
     throw new Error("User is not logged in");
   }
 
-  return JSON.parse(user);
+  return user;
 }
 
 export function getDriverId() {

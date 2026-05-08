@@ -86,7 +86,7 @@ export default function BusSchedule() {
           <h1>Bus Schedule</h1>
           <p>
             View active Canberra Bus routes, departure times, fares, and stop
-            lists directly from the MySQL routes table.
+            lists.
           </p>
         </div>
 
@@ -166,7 +166,7 @@ export default function BusSchedule() {
                     View Stops
                   </button>
 
-                  <a className="passenger-btn" href="/passenger/book">
+                  <a className="passenger-btn" href="/passenger/book-ticket">
                     <FaTicketAlt />
                     Book Ticket
                   </a>

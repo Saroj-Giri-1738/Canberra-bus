@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { getCurrentUser } from "../../services/api";
 import "./PassengerPages.css";
 import {
   FaCalendarAlt,
   FaClock,
+  FaEdit,
   FaMapMarkedAlt,
   FaSyncAlt,
   FaTicketAlt,
@@ -12,14 +14,19 @@ import {
   formatDate,
   formatTime,
   getPassengerBookings,
+  updatePassengerBooking,
   updatePassengerBookingStatus,
   type PassengerBooking,
 } from "../../services/passengerApi";
+import { addAdminBookingNotification } from "../../services/adminApi";
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState<PassengerBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [editingBookingId, setEditingBookingId] = useState<number | null>(null);
+  const [editTravelDate, setEditTravelDate] = useState("");
+  const [editSeats, setEditSeats] = useState("1");
 
   const loadBookings = async () => {
     try {
@@ -48,9 +55,73 @@ export default function MyBookings() {
 
     try {
       await updatePassengerBookingStatus(bookingId, "Cancelled");
+
+      const booking = bookings.find((item) => item.booking_id === bookingId);
+      if (booking) {
+        const user = getCurrentUser();
+        const passengerName = user?.full_name || "Passenger";
+
+        addAdminBookingNotification({
+          id: `booking-${bookingId}-${Date.now()}`,
+          passenger_id: booking.passenger_id,
+          passenger_name: passengerName,
+          booking_id: booking.booking_id,
+          route_name: booking.route_name,
+          action: "Cancelled",
+          detail: `Booking cancelled for ${booking.route_name} on ${formatDate(
+            booking.travel_date
+          )}`,
+          created_at: new Date().toISOString(),
+        });
+      }
+
       await loadBookings();
     } catch (error: any) {
       alert(error.message || "Failed to cancel booking");
+    }
+  };
+
+  const handleStartEditBooking = (booking: PassengerBooking) => {
+    setEditingBookingId(booking.booking_id);
+    setEditTravelDate(booking.travel_date);
+    setEditSeats(String(booking.seats));
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBookingId(null);
+  };
+
+  const handleSaveBooking = async (booking: PassengerBooking) => {
+    if (!editTravelDate || !editSeats) {
+      alert("Please select a travel date and seat count.");
+      return;
+    }
+
+    try {
+      await updatePassengerBooking(booking.booking_id, {
+        travel_date: editTravelDate,
+        seats: Number(editSeats),
+        status: booking.booking_status,
+      });
+
+      const user = getCurrentUser();
+      const passengerName = user?.full_name || "Passenger";
+
+      addAdminBookingNotification({
+        id: `booking-${booking.booking_id}-${Date.now()}`,
+        passenger_id: booking.passenger_id,
+        passenger_name: passengerName,
+        booking_id: booking.booking_id,
+        route_name: booking.route_name,
+        action: "Edited",
+        detail: `Booking updated to ${editSeats} seat(s) on ${formatDate(editTravelDate)}`,
+        created_at: new Date().toISOString(),
+      });
+
+      setEditingBookingId(null);
+      await loadBookings();
+    } catch (error: any) {
+      alert(error.message || "Failed to save booking changes");
     }
   };
 
@@ -85,7 +156,7 @@ export default function MyBookings() {
           <span className="passenger-badge">Passenger Services</span>
           <h1>My Bookings</h1>
           <p>
-            View your booked tickets from the MySQL bookings table and cancel
+            View your booked tickets and cancel
             tickets if required.
           </p>
         </div>
@@ -163,14 +234,63 @@ export default function MyBookings() {
                 <div className="passenger-booking-footer">
                   <strong>${Number(booking.total_amount).toFixed(2)}</strong>
 
-                  {booking.booking_status === "Booked" && (
-                    <button
-                      className="passenger-btn danger"
-                      onClick={() => handleCancelBooking(booking.booking_id)}
-                    >
-                      <FaTimesCircle />
-                      Cancel Booking
-                    </button>
+                  {editingBookingId === booking.booking_id ? (
+                    <div className="passenger-booking-edit-panel">
+                      <div className="passenger-input-group">
+                        <label>Travel Date</label>
+                        <input
+                          type="date"
+                          value={editTravelDate}
+                          onChange={(e) => setEditTravelDate(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="passenger-input-group">
+                        <label>Seats</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={editSeats}
+                          onChange={(e) => setEditSeats(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="passenger-booking-edit-actions">
+                        <button
+                          className="passenger-btn"
+                          onClick={() => handleSaveBooking(booking)}
+                        >
+                          Save Changes
+                        </button>
+                        <button
+                          className="passenger-btn light"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    booking.booking_status === "Booked" && (
+                      <div className="passenger-booking-actions">
+                        <button
+                          className="passenger-btn secondary"
+                          onClick={() => handleStartEditBooking(booking)}
+                        >
+                          <FaEdit />
+                          Edit Booking
+                        </button>
+
+                        <button
+                          className="passenger-btn danger"
+                          onClick={() => handleCancelBooking(booking.booking_id)}
+                        >
+                          <FaTimesCircle />
+                          Cancel Booking
+                        </button>
+                      </div>
+                    )
                   )}
                 </div>
               </div>

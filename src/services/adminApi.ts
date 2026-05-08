@@ -45,6 +45,27 @@ export type AdminUser = {
   created_at: string;
 };
 
+export type AdminFeedback = {
+  id: number;
+  passenger_id: number | null;
+
+  feedback_full_name: string | null;
+  feedback_email: string | null;
+  subject: string | null;
+
+  message: string;
+  rating: number;
+
+  admin_response: string | null;
+  response_status: "Pending" | "Responded";
+  responded_at: string | null;
+
+  created_at: string;
+
+  user_full_name: string | null;
+  user_email: string | null;
+};
+
 async function handleResponse(response: Response) {
   const data = await response.json();
 
@@ -202,6 +223,78 @@ export async function deleteAdminUser(id: number) {
 }
 
 /* =========================
+   FEEDBACK / REPORTS
+========================= */
+
+export async function getAdminFeedback() {
+  const response = await fetch(`${API_BASE_URL}/admin/feedback.php`);
+  const data = await handleResponse(response);
+
+  return data.feedback as AdminFeedback[];
+}
+
+export async function saveAdminFeedbackResponse(
+  id: number,
+  adminResponse: string
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/feedback.php`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id,
+      admin_response: adminResponse,
+    }),
+  });
+
+  return handleResponse(response);
+}
+
+export async function deleteAdminFeedback(id: number) {
+  const response = await fetch(`${API_BASE_URL}/admin/feedback.php?id=${id}`, {
+    method: "DELETE",
+  });
+
+  return handleResponse(response);
+}
+
+export type AdminBookingNotification = {
+  id: string;
+  passenger_id: number;
+  passenger_name: string;
+  booking_id: number;
+  route_name: string;
+  action: "Edited" | "Cancelled";
+  detail: string;
+  created_at: string;
+};
+
+const BOOKING_NOTIFICATIONS_KEY = "adminBookingNotifications";
+
+export function getAdminBookingNotifications() {
+  const raw = localStorage.getItem(BOOKING_NOTIFICATIONS_KEY);
+
+  if (!raw) return [];
+
+  try {
+    return JSON.parse(raw) as AdminBookingNotification[];
+  } catch {
+    return [];
+  }
+}
+
+export function addAdminBookingNotification(notification: AdminBookingNotification) {
+  const notifications = getAdminBookingNotifications();
+  notifications.unshift(notification);
+  localStorage.setItem(BOOKING_NOTIFICATIONS_KEY, JSON.stringify(notifications));
+}
+
+export function clearAdminBookingNotifications() {
+  localStorage.removeItem(BOOKING_NOTIFICATIONS_KEY);
+}
+
+/* =========================
    HELPERS
 ========================= */
 
@@ -218,4 +311,16 @@ export function formatTime(time: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export function getFeedbackDisplayName(feedback: AdminFeedback) {
+  return (
+    feedback.user_full_name ||
+    feedback.feedback_full_name ||
+    "Unknown Passenger"
+  );
+}
+
+export function getFeedbackDisplayEmail(feedback: AdminFeedback) {
+  return feedback.user_email || feedback.feedback_email || "No email available";
 }

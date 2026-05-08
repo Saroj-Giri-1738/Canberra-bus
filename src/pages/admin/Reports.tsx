@@ -1,209 +1,565 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./AdminPages.css";
 import {
-  FaChartBar,
+  FaBell,
   FaBusAlt,
+  FaClipboardCheck,
+  FaFileAlt,
+  FaPaperPlane,
+  FaRoute,
+  FaStar,
+  FaSyncAlt,
+  FaTicketAlt,
+  FaTrash,
+  FaUserShield,
+  FaUserTie,
   FaUsers,
-  FaClipboardList,
-  FaSearch,
-  FaTimes,
 } from "react-icons/fa";
-
-type ReportItem = {
-  id: number;
-  title: string;
-  category: "Fleet" | "Users" | "Bookings";
-  summary: string;
-  lastUpdated: string;
-  details: string;
-};
+import {
+  deleteAdminFeedback,
+  getAdminBookingNotifications,
+  clearAdminBookingNotifications,
+  getAdminFeedback,
+  getAdminStats,
+  getFeedbackDisplayEmail,
+  getFeedbackDisplayName,
+  saveAdminFeedbackResponse,
+  type AdminBookingNotification,
+  type AdminFeedback,
+  type AdminStats,
+} from "../../services/adminApi";
 
 export default function Reports() {
-  const [reports] = useState<ReportItem[]>([
-    {
-      id: 1,
-      title: "Fleet Performance",
-      category: "Fleet",
-      summary: "40 buses monitored • 2 maintenance flags",
-      lastUpdated: "06 Apr 2026",
-      details:
-        "This report summarizes bus usage, maintenance alerts, and fleet readiness for the current operational cycle.",
-    },
-    {
-      id: 2,
-      title: "User Engagement",
-      category: "Users",
-      summary: "520 active users • 12% monthly growth",
-      lastUpdated: "06 Apr 2026",
-      details:
-        "This report tracks user growth, new registrations, and engagement trends across passenger, driver, and admin roles.",
-    },
-    {
-      id: 3,
-      title: "Booking Summary",
-      category: "Bookings",
-      summary: "148 bookings today • Peak travel in morning",
-      lastUpdated: "06 Apr 2026",
-      details:
-        "This report highlights daily booking activity, peak travel periods, and route demand based on user reservations.",
-    },
-  ]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [feedback, setFeedback] = useState<AdminFeedback[]>([]);
+  const [bookingNotifications, setBookingNotifications] = useState<AdminBookingNotification[]>([]);
+  const [responseText, setResponseText] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [savingResponseId, setSavingResponseId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
+  const loadReports = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
 
-  const filteredReports = useMemo(() => {
-    return reports.filter((report) => {
-      const matchesSearch =
-        report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.summary.toLowerCase().includes(searchTerm.toLowerCase());
+      const statsData = await getAdminStats();
+      const feedbackData = await getAdminFeedback();
+      const notifications = getAdminBookingNotifications();
 
-      const matchesCategory =
-        categoryFilter === "All" ? true : report.category === categoryFilter;
+      setStats(statsData);
+      setFeedback(feedbackData);
+      setBookingNotifications(notifications);
 
-      return matchesSearch && matchesCategory;
-    });
-  }, [reports, searchTerm, categoryFilter]);
+      const initialResponses: Record<number, string> = {};
+      feedbackData.forEach((item) => {
+        initialResponses[item.id] = item.admin_response || "";
+      });
+      setResponseText(initialResponses);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to load reports");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const averageRating = useMemo(() => {
+    if (feedback.length === 0) return 0;
+
+    const total = feedback.reduce((sum, item) => sum + Number(item.rating), 0);
+    return total / feedback.length;
+  }, [feedback]);
+
+  const handleDeleteFeedback = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this feedback?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteAdminFeedback(id);
+      await loadReports();
+    } catch (error: any) {
+      alert(error.message || "Failed to delete feedback");
+    }
+  };
+
+  const handleSaveResponse = async (feedbackId: number) => {
+    const reply = responseText[feedbackId] || "";
+
+    if (!reply.trim()) {
+      alert("Please write a response before saving.");
+      return;
+    }
+
+    try {
+      setSavingResponseId(feedbackId);
+
+      await saveAdminFeedbackResponse(feedbackId, reply);
+
+      alert("Admin response saved successfully.");
+      await loadReports();
+    } catch (error: any) {
+      alert(error.message || "Failed to save admin response");
+    } finally {
+      setSavingResponseId(null);
+    }
+  };
+
+  const handleClearNotifications = () => {
+    const confirmed = window.confirm(
+      "Clear all booking notifications?"
+    );
+
+    if (!confirmed) return;
+
+    clearAdminBookingNotifications();
+    setBookingNotifications([]);
+  };
+
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <div className="admin-panel">
+          <h2>Loading reports...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMessage || !stats) {
+    return (
+      <div className="admin-page">
+        <div className="admin-panel">
+          <h2>Something went wrong</h2>
+          <p>{errorMessage}</p>
+          <button className="admin-btn" onClick={loadReports}>
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const generatedDate = new Date().toLocaleString("en-AU", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
     <div className="admin-page">
-      <section className="admin-page-hero">
+      <section className="admin-report-hero">
         <div>
-          <span className="admin-page-badge">Admin Services</span>
-          <h1>Reports</h1>
-          <p>View platform summaries, fleet activity, and user engagement reports.</p>
+          <span className="admin-badge">Generated Report</span>
+          <h1>System Reports</h1>
+          <p>
+            Detailed operational report generated for
+            users, fleet, routes, bookings, driver activity, and passenger
+            feedback.
+          </p>
+          <small>Last generated: {generatedDate}</small>
+        </div>
+
+        <button className="admin-btn light" onClick={loadReports}>
+          <FaSyncAlt />
+          Refresh Report
+        </button>
+      </section>
+
+      <section className="admin-report-summary">
+        <div className="admin-report-summary-card">
+          <FaFileAlt />
+          <div>
+            <h3>
+              {stats.total_users +
+                stats.total_buses +
+                stats.total_routes +
+                stats.total_bookings}
+            </h3>
+            <p>Total System Records</p>
+          </div>
+        </div>
+
+        <div className="admin-report-summary-card">
+          <FaTicketAlt />
+          <div>
+            <h3>{stats.total_bookings}</h3>
+            <p>Total Ticket Bookings</p>
+          </div>
+        </div>
+
+        <div className="admin-report-summary-card">
+          <FaBell />
+          <div>
+            <h3>{bookingNotifications.length}</h3>
+            <p>Booking Alerts</p>
+          </div>
+        </div>
+
+        <div className="admin-report-summary-card">
+          <FaClipboardCheck />
+          <div>
+            <h3>{stats.completed_trips}</h3>
+            <p>Completed Trips Today</p>
+          </div>
+        </div>
+
+        <div className="admin-report-summary-card">
+          <FaStar />
+          <div>
+            <h3>{averageRating.toFixed(1)}</h3>
+            <p>Average Feedback Rating</p>
+          </div>
         </div>
       </section>
 
-      <section className="admin-summary-grid">
-        <div className="admin-summary-card">
-          <h3>74</h3>
-          <p>Trips Completed Today</p>
-        </div>
-        <div className="admin-summary-card">
-          <h3>148</h3>
-          <p>Bookings Today</p>
-        </div>
-        <div className="admin-summary-card">
-          <h3>40</h3>
-          <p>Fleet in System</p>
-        </div>
-      </section>
-
-      <section className="admin-page-panel">
-        <div className="admin-filter-bar">
-          <div className="admin-search-box">
-            <FaSearch className="admin-search-icon" />
-            <input
-              type="text"
-              placeholder="Search reports"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      <section className="admin-report-grid">
+        <div className="admin-panel">
+          <div className="admin-panel-head">
+            <div>
+              <span className="admin-badge">User Report</span>
+              <h2>User Breakdown</h2>
+            </div>
           </div>
 
-          <select
-            className="admin-role-filter"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="All">All Categories</option>
-            <option value="Fleet">Fleet</option>
-            <option value="Users">Users</option>
-            <option value="Bookings">Bookings</option>
-          </select>
+          <div className="admin-report-table">
+            <div className="admin-report-row">
+              <span>
+                <FaUsers /> Total Users
+              </span>
+              <strong>{stats.total_users}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaUserTie /> Drivers
+              </span>
+              <strong>{stats.total_drivers}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaUsers /> Passengers
+              </span>
+              <strong>{stats.total_passengers}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaUserShield /> Admins
+              </span>
+              <strong>{stats.total_admins}</strong>
+            </div>
+          </div>
         </div>
 
-        <h2>Report Overview</h2>
-        <p>Recent key reporting indicators for the transport platform.</p>
-
-        <div className="admin-record-list">
-          {filteredReports.length === 0 ? (
-            <div className="admin-empty-state">
-              No reports found for this filter.
+        <div className="admin-panel">
+          <div className="admin-panel-head">
+            <div>
+              <span className="admin-badge">Fleet Report</span>
+              <h2>Fleet Breakdown</h2>
             </div>
-          ) : (
-            filteredReports.map((report) => (
-              <div className="admin-record-card" key={report.id}>
-                <div className="admin-record-top">
-                  <h3>{report.title}</h3>
-                  <span className="admin-status-pill admin-role-badge">
-                    {report.category}
-                  </span>
-                </div>
+          </div>
 
-                <div className="admin-record-meta">
-                  <span>
-                    {report.category === "Fleet" ? (
-                      <FaBusAlt />
-                    ) : report.category === "Users" ? (
-                      <FaUsers />
-                    ) : (
-                      <FaClipboardList />
-                    )}{" "}
-                    {report.summary}
-                  </span>
-                  <span>
-                    <FaChartBar /> Updated: {report.lastUpdated}
-                  </span>
-                </div>
+          <div className="admin-report-table">
+            <div className="admin-report-row">
+              <span>
+                <FaBusAlt /> Total Buses
+              </span>
+              <strong>{stats.total_buses}</strong>
+            </div>
 
-                <div className="admin-action-row">
-                  <button
-                    className="admin-page-btn"
-                    onClick={() => setSelectedReport(report)}
-                  >
-                    View Report
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+            <div className="admin-report-row">
+              <span>
+                <FaBusAlt /> Active Buses
+              </span>
+              <strong>{stats.active_buses}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaBusAlt /> Maintenance Buses
+              </span>
+              <strong>{stats.maintenance_buses}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaRoute /> Active Routes
+              </span>
+              <strong>{stats.active_routes}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-panel">
+          <div className="admin-panel-head">
+            <div>
+              <span className="admin-badge">Booking Report</span>
+              <h2>Ticket and Booking Summary</h2>
+            </div>
+          </div>
+
+          <div className="admin-report-table">
+            <div className="admin-report-row">
+              <span>
+                <FaTicketAlt /> Total Bookings
+              </span>
+              <strong>{stats.total_bookings}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaRoute /> Total Routes
+              </span>
+              <strong>{stats.total_routes}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaClipboardCheck /> Today Assignments
+              </span>
+              <strong>{stats.today_assignments}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaClipboardCheck /> Completed Trips
+              </span>
+              <strong>{stats.completed_trips}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-panel">
+          <div className="admin-panel-head">
+            <div>
+              <span className="admin-badge">Feedback Report</span>
+              <h2>Customer Satisfaction</h2>
+            </div>
+          </div>
+
+          <div className="admin-report-table">
+            <div className="admin-report-row">
+              <span>
+                <FaStar /> Feedback Records
+              </span>
+              <strong>{feedback.length}</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaStar /> Average Rating
+              </span>
+              <strong>{averageRating.toFixed(1)} / 5</strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaStar /> Pending Responses
+              </span>
+              <strong>
+                {
+                  feedback.filter(
+                    (item) => item.response_status === "Pending"
+                  ).length
+                }
+              </strong>
+            </div>
+
+            <div className="admin-report-row">
+              <span>
+                <FaStar /> Responded Feedback
+              </span>
+              <strong>
+                {
+                  feedback.filter(
+                    (item) => item.response_status === "Responded"
+                  ).length
+                }
+              </strong>
+            </div>
+          </div>
         </div>
       </section>
 
-      {selectedReport && (
-        <div
-          className="admin-modal-overlay"
-          onClick={() => setSelectedReport(null)}
-        >
-          <div
-            className="admin-modal-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="admin-modal-header">
-              <h2>Report Details</h2>
-              <button
-                className="admin-close-btn"
-                onClick={() => setSelectedReport(null)}
+      <section className="admin-panel">
+        <div className="admin-panel-head">
+          <div>
+            <span className="admin-badge">Booking Alerts</span>
+            <h2>Passenger Booking Notifications</h2>
+          </div>
+
+          <button className="admin-btn light" onClick={handleClearNotifications}>
+            Clear All
+          </button>
+        </div>
+
+        {bookingNotifications.length === 0 ? (
+          <div className="admin-report-empty">
+            <FaBell />
+            <h3>No booking alerts</h3>
+            <p>
+              Booking edits and cancellations will appear here for admin review.
+            </p>
+          </div>
+        ) : (
+          <div className="admin-feedback-list">
+            {bookingNotifications.map((notification) => (
+              <div
+                className="admin-feedback-card"
+                key={notification.id}
               >
-                <FaTimes />
-              </button>
-            </div>
+                <div className="admin-feedback-top">
+                  <div>
+                    <h3>{notification.passenger_name}</h3>
+                    <p>
+                      Booking {notification.action.toLowerCase()} for{' '}
+                      {notification.route_name}
+                    </p>
+                  </div>
 
-            <div className="admin-profile-grid">
-              <div className="admin-profile-item">
-                <strong>Title</strong>
-                <span>{selectedReport.title}</span>
-              </div>
-              <div className="admin-profile-item">
-                <strong>Category</strong>
-                <span>{selectedReport.category}</span>
-              </div>
-              <div className="admin-profile-item">
-                <strong>Last Updated</strong>
-                <span>{selectedReport.lastUpdated}</span>
-              </div>
-            </div>
+                  <span className="admin-response-status admin-response-status-pending">
+                    {notification.action}
+                  </span>
+                </div>
 
-            <div className="admin-report-details-box">
-              <strong>Summary</strong>
-              <p>{selectedReport.details}</p>
-            </div>
+                <p className="admin-feedback-message">{notification.detail}</p>
+                <small>
+                  {new Date(notification.created_at).toLocaleString("en-AU")}
+                </small>
+              </div>
+            ))}
           </div>
+        )}
+      </section>
+
+      <section className="admin-panel">
+        <div className="admin-panel-head">
+          <div>
+            <span className="admin-badge">Passenger Feedback</span>
+            <h2>Feedback Details</h2>
+          </div>
+
+          <strong>{feedback.length} record(s)</strong>
         </div>
-      )}
+
+        {feedback.length === 0 ? (
+          <div className="admin-report-empty">
+            <FaStar />
+            <h3>No feedback submitted yet</h3>
+            <p>
+              Passenger feedback will appear here after users submit ratings and
+              comments.
+            </p>
+          </div>
+        ) : (
+          <div className="admin-feedback-list">
+            {feedback.map((item) => {
+              const displayName = getFeedbackDisplayName(item);
+              const displayEmail = getFeedbackDisplayEmail(item);
+
+              return (
+                <div className="admin-feedback-card" key={item.id}>
+                  <div className="admin-feedback-top">
+                    <div>
+                      <h3>{displayName}</h3>
+                      <p>{displayEmail}</p>
+                    </div>
+
+                    <div className="admin-feedback-actions">
+                      <span
+                        className={`admin-response-status ${
+                          item.response_status === "Responded"
+                            ? "admin-response-status-done"
+                            : "admin-response-status-pending"
+                        }`}
+                      >
+                        {item.response_status}
+                      </span>
+
+                      <button
+                        className="admin-icon-btn danger"
+                        onClick={() => handleDeleteFeedback(item.id)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="admin-feedback-stars">
+                    {Array.from({ length: Number(item.rating) }).map(
+                      (_, index) => (
+                        <FaStar key={index} />
+                      )
+                    )}
+                  </div>
+
+                  {item.subject && (
+                    <p className="admin-feedback-subject">
+                      <strong>Subject:</strong> {item.subject}
+                    </p>
+                  )}
+
+                  <p className="admin-feedback-message">{item.message}</p>
+
+                  <small>
+                    Submitted:{" "}
+                    {new Date(item.created_at).toLocaleString("en-AU")}
+                  </small>
+
+                  {item.admin_response && (
+                    <div className="admin-existing-response">
+                      <strong>Admin Response:</strong>
+                      <p>{item.admin_response}</p>
+                      {item.responded_at && (
+                        <small>
+                          Responded:{" "}
+                          {new Date(item.responded_at).toLocaleString("en-AU")}
+                        </small>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="admin-response-box">
+                    <label>Write / Update Admin Response</label>
+                    <textarea
+                      value={responseText[item.id] || ""}
+                      onChange={(event) =>
+                        setResponseText((previous) => ({
+                          ...previous,
+                          [item.id]: event.target.value,
+                        }))
+                      }
+                      placeholder="Write a response to this passenger..."
+                      rows={4}
+                    />
+
+                    <button
+                      className="admin-btn"
+                      onClick={() => handleSaveResponse(item.id)}
+                      disabled={savingResponseId === item.id}
+                    >
+                      <FaPaperPlane />
+                      {savingResponseId === item.id
+                        ? "Saving..."
+                        : "Save Response"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -1,13 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { FaBusAlt } from "react-icons/fa";
+import { getCurrentUser, clearAllUsers } from "../../services/api";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const rawUser = localStorage.getItem("user");
-  const user = rawUser ? JSON.parse(rawUser) : null;
+  const user = getCurrentUser();
+  const dashboardLink = user ? `/${user.role}/dashboard` : "";
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    clearAllUsers();
     navigate("/login");
   };
 
@@ -21,6 +22,7 @@ export default function Navbar() {
 
         <div className="nav-links">
           <Link to="/">Home</Link>
+          {user ? <Link to={dashboardLink}>Dashboard</Link> : null}
           <Link to="/about">About</Link>
           <Link to="/contact">Contact</Link>
           {!user ? (

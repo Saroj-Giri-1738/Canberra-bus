@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./AdminPages.css";
+import { getCurrentUser } from "../../services/api";
 import {
   FaUsers,
   FaUserTie,
@@ -13,8 +14,8 @@ import {
 import { getAdminStats, type AdminStats } from "../../services/adminApi";
 
 export default function AdminDashboard() {
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const adminName = storedUser?.full_name || storedUser?.fullName || "Admin";
+  const user = getCurrentUser();
+  const adminName = user?.full_name || "Admin";
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,7 +114,7 @@ export default function AdminDashboard() {
           <h1>Welcome back, {adminName}</h1>
           <p>
             Monitor Canberra Bus Company users, buses, routes, bookings, and
-            daily driver operations from your MySQL backend.
+            daily driver operations.
           </p>
         </div>
 

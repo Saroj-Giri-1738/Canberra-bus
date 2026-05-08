@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
+import { getCurrentUser } from "../../services/api";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,8 +11,7 @@ export default function ProtectedRoute({
   children,
   allowedRoles,
 }: ProtectedRouteProps) {
-  const rawUser = localStorage.getItem("user");
-  const user = rawUser ? JSON.parse(rawUser) : null;
+  const user = getCurrentUser();
 
   if (!user) {
     return <Navigate to="/login" replace />;
