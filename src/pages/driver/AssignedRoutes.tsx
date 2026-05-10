@@ -122,7 +122,7 @@ export default function AssignedRoutes() {
           <span className="driver-page-badge">Driver Services</span>
           <h1>Assigned Routes</h1>
           <p>
-            View today’s assigned routes from MySQL, update trip status,
+            View today’s assigned routes , update trip status,
             complete inspections, and review stop lists.
           </p>
         </div>

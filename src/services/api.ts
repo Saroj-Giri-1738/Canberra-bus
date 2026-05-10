@@ -22,12 +22,12 @@ export function getCurrentUser(): AuthUser | null {
   const keys = ["user_admin", "user_driver", "user_passenger"];
 
   for (const key of keys) {
-    const stored = localStorage.getItem(key);
+    const stored = sessionStorage.getItem(key);
     if (stored) {
       try {
         return JSON.parse(stored) as AuthUser;
       } catch {
-        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
       }
     }
   }
@@ -37,7 +37,7 @@ export function getCurrentUser(): AuthUser | null {
 
 export function clearAllUsers(): void {
   ["user_admin", "user_driver", "user_passenger"].forEach((key) => {
-    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
   });
 }
 
@@ -90,7 +90,7 @@ export async function loginUser(email: string, password: string) {
   }
 
   const user = data.user as AuthUser;
-  localStorage.setItem(getUserStorageKey(user.role), JSON.stringify(user));
+  sessionStorage.setItem(getUserStorageKey(user.role), JSON.stringify(user));
 
   return user;
 }

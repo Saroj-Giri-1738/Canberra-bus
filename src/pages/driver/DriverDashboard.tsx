@@ -238,7 +238,7 @@ export default function DriverDashboard() {
           <h1>Welcome back, {driverName}</h1>
           <p className="driver-dashboard-subtext">
             Manage assigned routes, attendance, vehicle checks, and daily trip
-            progress using your MySQL backend.
+            progress.
           </p>
 
           {!attendance && (

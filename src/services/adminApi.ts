@@ -48,22 +48,27 @@ export type AdminUser = {
 export type AdminFeedback = {
   id: number;
   passenger_id: number | null;
-
   feedback_full_name: string | null;
   feedback_email: string | null;
   subject: string | null;
-
   message: string;
   rating: number;
-
   admin_response: string | null;
   response_status: "Pending" | "Responded";
   responded_at: string | null;
-
   created_at: string;
-
   user_full_name: string | null;
   user_email: string | null;
+};
+
+export type AdminNotification = {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  related_id: number | null;
+  is_read: number;
+  created_at: string;
 };
 
 async function handleResponse(response: Response) {
@@ -76,20 +81,12 @@ async function handleResponse(response: Response) {
   return data;
 }
 
-/* =========================
-   ADMIN DASHBOARD STATS
-========================= */
-
 export async function getAdminStats() {
   const response = await fetch(`${API_BASE_URL}/admin/stats.php`);
   const data = await handleResponse(response);
 
   return data.stats as AdminStats;
 }
-
-/* =========================
-   ROUTES
-========================= */
 
 export async function getAdminRoutes() {
   const response = await fetch(`${API_BASE_URL}/admin/routes.php`);
@@ -138,10 +135,6 @@ export async function deleteAdminRoute(id: number) {
   return handleResponse(response);
 }
 
-/* =========================
-   BUSES
-========================= */
-
 export async function getAdminBuses() {
   const response = await fetch(`${API_BASE_URL}/admin/buses.php`);
   const data = await handleResponse(response);
@@ -186,10 +179,6 @@ export async function deleteAdminBus(id: number) {
   return handleResponse(response);
 }
 
-/* =========================
-   USERS
-========================= */
-
 export async function getAdminUsers() {
   const response = await fetch(`${API_BASE_URL}/admin/users.php`);
   const data = await handleResponse(response);
@@ -221,10 +210,6 @@ export async function deleteAdminUser(id: number) {
 
   return handleResponse(response);
 }
-
-/* =========================
-   FEEDBACK / REPORTS
-========================= */
 
 export async function getAdminFeedback() {
   const response = await fetch(`${API_BASE_URL}/admin/feedback.php`);
@@ -259,44 +244,46 @@ export async function deleteAdminFeedback(id: number) {
   return handleResponse(response);
 }
 
-export type AdminBookingNotification = {
-  id: string;
-  passenger_id: number;
-  passenger_name: string;
-  booking_id: number;
-  route_name: string;
-  action: "Edited" | "Cancelled";
-  detail: string;
-  created_at: string;
-};
+export async function getAdminNotifications() {
+  const response = await fetch(`${API_BASE_URL}/admin/notifications.php`);
+  const data = await handleResponse(response);
 
-const BOOKING_NOTIFICATIONS_KEY = "adminBookingNotifications";
-
-export function getAdminBookingNotifications() {
-  const raw = localStorage.getItem(BOOKING_NOTIFICATIONS_KEY);
-
-  if (!raw) return [];
-
-  try {
-    return JSON.parse(raw) as AdminBookingNotification[];
-  } catch {
-    return [];
-  }
+  return data.notifications as AdminNotification[];
 }
 
-export function addAdminBookingNotification(notification: AdminBookingNotification) {
-  const notifications = getAdminBookingNotifications();
-  notifications.unshift(notification);
-  localStorage.setItem(BOOKING_NOTIFICATIONS_KEY, JSON.stringify(notifications));
+export async function markAdminNotificationAsRead(id: number) {
+  const response = await fetch(`${API_BASE_URL}/admin/notifications.php`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id }),
+  });
+
+  return handleResponse(response);
 }
 
-export function clearAdminBookingNotifications() {
-  localStorage.removeItem(BOOKING_NOTIFICATIONS_KEY);
+export async function deleteAdminNotification(id: number) {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/notifications.php?id=${id}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  return handleResponse(response);
 }
 
-/* =========================
-   HELPERS
-========================= */
+export async function clearAdminNotifications() {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/notifications.php?clear_all=1`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  return handleResponse(response);
+}
 
 export function formatTime(time: string) {
   if (!time) return "N/A";
@@ -323,4 +310,32 @@ export function getFeedbackDisplayName(feedback: AdminFeedback) {
 
 export function getFeedbackDisplayEmail(feedback: AdminFeedback) {
   return feedback.user_email || feedback.feedback_email || "No email available";
+}
+
+/*
+  These old functions are kept only so old Reports.tsx imports do not crash.
+  The real notification system now uses MySQL through getAdminNotifications().
+*/
+
+export type AdminBookingNotification = {
+  id: string;
+  passenger_id: number;
+  passenger_name: string;
+  booking_id: number;
+  route_name: string;
+  action: "Edited" | "Cancelled";
+  detail: string;
+  created_at: string;
+};
+
+export function getAdminBookingNotifications() {
+  return [] as AdminBookingNotification[];
+}
+
+export function addAdminBookingNotification(_notification: AdminBookingNotification) {
+  return;
+}
+
+export function clearAdminBookingNotifications() {
+  return;
 }

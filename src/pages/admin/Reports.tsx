@@ -16,23 +16,25 @@ import {
   FaUsers,
 } from "react-icons/fa";
 import {
+  clearAdminNotifications,
   deleteAdminFeedback,
-  getAdminBookingNotifications,
-  clearAdminBookingNotifications,
   getAdminFeedback,
+  getAdminNotifications,
   getAdminStats,
   getFeedbackDisplayEmail,
   getFeedbackDisplayName,
   saveAdminFeedbackResponse,
-  type AdminBookingNotification,
   type AdminFeedback,
+  type AdminNotification,
   type AdminStats,
 } from "../../services/adminApi";
 
 export default function Reports() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [feedback, setFeedback] = useState<AdminFeedback[]>([]);
-  const [bookingNotifications, setBookingNotifications] = useState<AdminBookingNotification[]>([]);
+  const [bookingNotifications, setBookingNotifications] = useState<
+    AdminNotification[]
+  >([]);
   const [responseText, setResponseText] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [savingResponseId, setSavingResponseId] = useState<number | null>(null);
@@ -45,11 +47,11 @@ export default function Reports() {
 
       const statsData = await getAdminStats();
       const feedbackData = await getAdminFeedback();
-      const notifications = getAdminBookingNotifications();
+      const notificationsData = await getAdminNotifications();
 
       setStats(statsData);
       setFeedback(feedbackData);
-      setBookingNotifications(notifications);
+      setBookingNotifications(notificationsData);
 
       const initialResponses: Record<number, string> = {};
       feedbackData.forEach((item) => {
@@ -73,6 +75,12 @@ export default function Reports() {
     const total = feedback.reduce((sum, item) => sum + Number(item.rating), 0);
     return total / feedback.length;
   }, [feedback]);
+
+  const unreadNotifications = useMemo(() => {
+    return bookingNotifications.filter(
+      (notification) => Number(notification.is_read) === 0
+    ).length;
+  }, [bookingNotifications]);
 
   const handleDeleteFeedback = async (id: number) => {
     const confirmDelete = window.confirm(
@@ -111,15 +119,17 @@ export default function Reports() {
     }
   };
 
-  const handleClearNotifications = () => {
-    const confirmed = window.confirm(
-      "Clear all booking notifications?"
-    );
+  const handleClearNotifications = async () => {
+    const confirmed = window.confirm("Clear all booking notifications?");
 
     if (!confirmed) return;
 
-    clearAdminBookingNotifications();
-    setBookingNotifications([]);
+    try {
+      await clearAdminNotifications();
+      await loadReports();
+    } catch (error: any) {
+      alert(error.message || "Failed to clear notifications");
+    }
   };
 
   if (loading) {
@@ -161,8 +171,8 @@ export default function Reports() {
           <span className="admin-badge">Generated Report</span>
           <h1>System Reports</h1>
           <p>
-            Detailed operational report generated for
-            users, fleet, routes, bookings, driver activity, and passenger
+            Detailed operational report generated for users, fleet, routes,
+            bookings, driver activity, admin notifications, and passenger
             feedback.
           </p>
           <small>Last generated: {generatedDate}</small>
@@ -200,7 +210,7 @@ export default function Reports() {
           <FaBell />
           <div>
             <h3>{bookingNotifications.length}</h3>
-            <p>Booking Alerts</p>
+            <p>Database Alerts</p>
           </div>
         </div>
 
@@ -394,45 +404,58 @@ export default function Reports() {
       <section className="admin-panel">
         <div className="admin-panel-head">
           <div>
-            <span className="admin-badge">Booking Alerts</span>
-            <h2>Passenger Booking Notifications</h2>
+            <span className="admin-badge">Database Alerts</span>
+            <h2>Admin Notifications</h2>
           </div>
 
-          <button className="admin-btn light" onClick={handleClearNotifications}>
-            Clear All
-          </button>
+          <div className="admin-alert-actions">
+            <strong>{unreadNotifications} unread</strong>
+
+            {bookingNotifications.length > 0 && (
+              <button
+                className="admin-btn light"
+                onClick={handleClearNotifications}
+              >
+                Clear All
+              </button>
+            )}
+          </div>
         </div>
 
         {bookingNotifications.length === 0 ? (
           <div className="admin-report-empty">
             <FaBell />
-            <h3>No booking alerts</h3>
+            <h3>No database alerts</h3>
             <p>
-              Booking edits and cancellations will appear here for admin review.
+              New bookings, booking edits, and cancellations will appear here
+              from the MySQL notifications table.
             </p>
           </div>
         ) : (
           <div className="admin-feedback-list">
             {bookingNotifications.map((notification) => (
-              <div
-                className="admin-feedback-card"
-                key={notification.id}
-              >
+              <div className="admin-feedback-card" key={notification.id}>
                 <div className="admin-feedback-top">
                   <div>
-                    <h3>{notification.passenger_name}</h3>
-                    <p>
-                      Booking {notification.action.toLowerCase()} for{' '}
-                      {notification.route_name}
-                    </p>
+                    <h3>{notification.title}</h3>
+                    <p>{notification.type}</p>
                   </div>
 
-                  <span className="admin-response-status admin-response-status-pending">
-                    {notification.action}
+                  <span
+                    className={`admin-response-status ${
+                      Number(notification.is_read) === 0
+                        ? "admin-response-status-pending"
+                        : "admin-response-status-done"
+                    }`}
+                  >
+                    {Number(notification.is_read) === 0 ? "New" : "Read"}
                   </span>
                 </div>
 
-                <p className="admin-feedback-message">{notification.detail}</p>
+                <p className="admin-feedback-message">
+                  {notification.message}
+                </p>
+
                 <small>
                   {new Date(notification.created_at).toLocaleString("en-AU")}
                 </small>

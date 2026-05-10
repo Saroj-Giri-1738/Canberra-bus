@@ -123,7 +123,7 @@ export default function Attendance() {
           <h1>Attendance</h1>
           <p>
             Mark today’s shift attendance, track your current status, and view
-            recent attendance history from MySQL.
+            recent attendance history.
           </p>
         </div>
       </section>

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../../services/api";
 import "./PassengerPages.css";
 import {
   FaCalendarAlt,
@@ -18,7 +17,6 @@ import {
   updatePassengerBookingStatus,
   type PassengerBooking,
 } from "../../services/passengerApi";
-import { addAdminBookingNotification } from "../../services/adminApi";
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState<PassengerBooking[]>([]);
@@ -55,27 +53,8 @@ export default function MyBookings() {
 
     try {
       await updatePassengerBookingStatus(bookingId, "Cancelled");
-
-      const booking = bookings.find((item) => item.booking_id === bookingId);
-      if (booking) {
-        const user = getCurrentUser();
-        const passengerName = user?.full_name || "Passenger";
-
-        addAdminBookingNotification({
-          id: `booking-${bookingId}-${Date.now()}`,
-          passenger_id: booking.passenger_id,
-          passenger_name: passengerName,
-          booking_id: booking.booking_id,
-          route_name: booking.route_name,
-          action: "Cancelled",
-          detail: `Booking cancelled for ${booking.route_name} on ${formatDate(
-            booking.travel_date
-          )}`,
-          created_at: new Date().toISOString(),
-        });
-      }
-
       await loadBookings();
+      alert("Booking cancelled. Admin alert has been saved to database.");
     } catch (error: any) {
       alert(error.message || "Failed to cancel booking");
     }
@@ -104,22 +83,10 @@ export default function MyBookings() {
         status: booking.booking_status,
       });
 
-      const user = getCurrentUser();
-      const passengerName = user?.full_name || "Passenger";
-
-      addAdminBookingNotification({
-        id: `booking-${booking.booking_id}-${Date.now()}`,
-        passenger_id: booking.passenger_id,
-        passenger_name: passengerName,
-        booking_id: booking.booking_id,
-        route_name: booking.route_name,
-        action: "Edited",
-        detail: `Booking updated to ${editSeats} seat(s) on ${formatDate(editTravelDate)}`,
-        created_at: new Date().toISOString(),
-      });
-
       setEditingBookingId(null);
       await loadBookings();
+
+      alert("Booking updated. Admin alert has been saved to database.");
     } catch (error: any) {
       alert(error.message || "Failed to save booking changes");
     }
@@ -156,8 +123,8 @@ export default function MyBookings() {
           <span className="passenger-badge">Passenger Services</span>
           <h1>My Bookings</h1>
           <p>
-            View your booked tickets and cancel
-            tickets if required.
+            View your booked tickets, edit travel details, or cancel tickets if
+            required.
           </p>
         </div>
 
@@ -263,6 +230,7 @@ export default function MyBookings() {
                         >
                           Save Changes
                         </button>
+
                         <button
                           className="passenger-btn light"
                           onClick={handleCancelEdit}

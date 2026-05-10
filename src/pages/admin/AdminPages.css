@@ -1055,3 +1055,106 @@
   background: white;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
+.admin-alert-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-empty-alerts {
+  text-align: center;
+  padding: 34px;
+  color: #64748b;
+}
+
+.admin-empty-alerts svg {
+  font-size: 36px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.admin-empty-alerts h3 {
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.admin-alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-alert-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px;
+  background: white;
+}
+
+.admin-alert-unread {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.admin-alert-read {
+  background: #f8fafc;
+}
+
+.admin-alert-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.admin-alert-content h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.admin-alert-content p {
+  margin: 8px 0;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.admin-alert-content small {
+  color: #64748b;
+}
+
+.admin-alert-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-alert-status {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-alert-status-new {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-alert-status-read {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.admin-alert-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

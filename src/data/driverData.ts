@@ -91,7 +91,7 @@ export const defaultDriverRoutes: DriverRoute[] = [
 
 const readJSON = <T,>(key: string, fallback: T): T => {
   try {
-    const value = localStorage.getItem(key);
+    const value = sessionStorage.getItem(key);
     return value ? (JSON.parse(value) as T) : fallback;
   } catch {
     return fallback;
@@ -99,7 +99,7 @@ const readJSON = <T,>(key: string, fallback: T): T => {
 };
 
 const writeJSON = <T,>(key: string, value: T) => {
-  localStorage.setItem(key, JSON.stringify(value));
+  sessionStorage.setItem(key, JSON.stringify(value));
 };
 
 export const getDriverRoutes = () => {
